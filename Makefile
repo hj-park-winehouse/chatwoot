@@ -1,6 +1,6 @@
 # Variables
 APP_NAME := chatwoot
-RAILS_ENV ?= development
+RAILS_ENV ?= production
 
 # Targets
 setup:
@@ -32,6 +32,13 @@ server:
 burn:
 	bundle && pnpm install
 
+prod:
+	@if [ -f ./.overmind.sock ]; then \
+		echo "Overmind is already running. Use 'make force_run' to start a new instance."; \
+	else \
+		overmind start -f Procfile.prod; \
+	fi
+
 run:
 	@if [ -f ./.overmind.sock ]; then \
 		echo "Overmind is already running. Use 'make force_run' to start a new instance."; \
@@ -60,3 +67,4 @@ docker:
 	docker build -t $(APP_NAME) -f ./docker/Dockerfile .
 
 .PHONY: setup db_create db_migrate db_seed db_reset db console server burn docker run force_run force_run_tunnel debug debug_worker
+
