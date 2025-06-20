@@ -18,7 +18,7 @@ db_seed:
 	RAILS_ENV=$(RAILS_ENV) bundle exec rails db:seed
 
 db_reset:
-	RAILS_ENV=$(RAILS_ENV) bundle exec rails db:reset
+	RAILS_ENV=$(RAILS_ENV) DISABLE_DATABASE_ENVIRONMENT_CHECK=1 bundle exec rails db:reset
 
 db:
 	RAILS_ENV=$(RAILS_ENV) bundle exec rails db:chatwoot_prepare
@@ -38,6 +38,13 @@ prod:
 	else \
 		overmind start -f Procfile.prod; \
 	fi
+
+prod-background:
+	@if [ -f ./.overmind.sock ]; then \
+                echo "Overmind is already running. Use 'make force_run' to start a new instance."; \
+        else \
+	nohup overmind start -f Procfile.prod > log.txt 2>&1 & \
+        fi
 
 run:
 	@if [ -f ./.overmind.sock ]; then \
