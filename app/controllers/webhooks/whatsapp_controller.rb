@@ -2,6 +2,9 @@ class Webhooks::WhatsappController < ActionController::API
   include MetaTokenVerifyConcern
 
   def process_payload
+    # Log all incoming WhatsApp webhook data
+    Rails.logger.info("WhatsApp Webhook Raw Data: #{params.to_unsafe_hash}")
+    
     if inactive_whatsapp_number?
       Rails.logger.warn("Rejected webhook for inactive WhatsApp number: #{params[:phone_number]}")
       render json: { error: 'Inactive WhatsApp number' }, status: :unprocessable_entity
