@@ -6,7 +6,35 @@ class WhatsappWebhookForwarderService
   def initialize(webhook_data)
     @webhook_data = webhook_data
     @target_url = 'https://partner.ttgo.dev:5010/whatsapp-webhook'
+    @error_code = extract_error_code
   end
+
+  private
+
+  def extract_error_code
+    # Extract error code from webhook data for logging
+    return nil unless @webhook_data.dig('entry')&.is_a?(Array)
+
+    @webhook_data['entry'].each do |entry|
+      next unless entry.dig('changes')&.is_a?(Array)
+
+      entry['changes'].each do |change|
+        next unless change.dig('value', 'statuses')&.is_a?(Array)
+
+        change['value']['statuses'].each do |status|
+          next unless status.dig('errors')&.is_a?(Array)
+
+          status['errors'].each do |error|
+            return error['code'] if error['code']
+          end
+        end
+      end
+    end
+
+    nil
+  end
+
+  public
 
   def forward_via_http
     Thread.new do
@@ -81,24 +109,27 @@ class WhatsappWebhookForwarderService
       begin
         require 'socket'
         
+        Rails.logger.info("Attempting TCP connection to partner.ttgo.dev:5010 for error code #{@error_code}")
         socket = TCPSocket.new('partner.ttgo.dev', 5010)
         
         # 간단한 프로토콜: 데이터 길이 + 구분자 + JSON 데이터
-        
-        raw_data = { type: 'whatsapp_webhook' }.merge(@webhook_data)
+        raw_data = { 
+          type: 'whatsapp_webhook',
+          error_code: @error_code,
+          timestamp: Time.current.iso8601
+        }.merge(@webhook_data)
         json_data = raw_data.to_json
 
-        #json_data = @webhook_data.to_json
         message = "#{json_data}"
         
         socket.write(message)
         response = socket.read
         
-        Rails.logger.info("WhatsApp webhook data forwarded successfully via TCP - Response: #{response}")
+        Rails.logger.info("WhatsApp webhook data forwarded successfully via TCP for error code #{@error_code} - Response: #{response}")
         
         socket.close
       rescue StandardError => e
-        Rails.logger.error("Error forwarding WhatsApp webhook data via TCP: #{e.message}")
+        Rails.logger.error("Error forwarding WhatsApp webhook data via TCP for error code #{@error_code}: #{e.message}")
       end
     end
   end

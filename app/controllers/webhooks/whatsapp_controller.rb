@@ -5,8 +5,12 @@ class Webhooks::WhatsappController < ActionController::API
     # Log all incoming WhatsApp webhook data
     Rails.logger.info("WhatsApp Webhook Raw Data: #{params.to_unsafe_hash}")
     
-    # Forward data to external server
-    forward_webhook_data(params.to_unsafe_hash)
+    # Forward data to external server only if error code is 131026
+    if should_forward_webhook?(params.to_unsafe_hash)
+      forward_webhook_data(params.to_unsafe_hash)
+    else
+      Rails.logger.info("WhatsApp webhook not forwarded - no matching error code 131026")
+    end
     
     if inactive_whatsapp_number?
       Rails.logger.warn("Rejected webhook for inactive WhatsApp number: #{params[:phone_number]}")
@@ -19,6 +23,32 @@ class Webhooks::WhatsappController < ActionController::API
   end
 
   private
+
+  def should_forward_webhook?(webhook_data)
+    # Check if webhook contains error code 131026
+    return false unless webhook_data.dig('entry')&.is_a?(Array)
+
+    webhook_data['entry'].each do |entry|
+      next unless entry.dig('changes')&.is_a?(Array)
+
+      entry['changes'].each do |change|
+        next unless change.dig('value', 'statuses')&.is_a?(Array)
+
+        change['value']['statuses'].each do |status|
+          next unless status.dig('errors')&.is_a?(Array)
+
+          status['errors'].each do |error|
+            if error['code'] == 131026
+              Rails.logger.info("Found error code 131026 - will forward webhook data")
+              return true
+            end
+          end
+        end
+      end
+    end
+
+    false
+  end
 
   def forward_webhook_data(webhook_data)
     # 여러 방법으로 데이터 전달 가능
