@@ -73,5 +73,5 @@ debug_worker:
 docker: 
 	docker build -t $(APP_NAME) -f ./docker/Dockerfile .
 
-.PHONY: setup db_create db_migrate db_seed db_reset db console server burn docker run force_run force_run_tunnel debug debug_worker
+.PHONY: setup db_create db_migrate db_seed db_reset db console server burn prod prod-background docker run force_run force_run_tunnel debug debug_worker
 

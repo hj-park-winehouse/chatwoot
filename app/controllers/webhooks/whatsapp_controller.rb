@@ -29,6 +29,8 @@ class Webhooks::WhatsappController < ActionController::API
     # forwarder = WhatsappWebhookForwarderService.new(webhook_data)
     # forwarder.forward_via_http      # Net::HTTP 사용
     # forwarder.forward_via_websocket # WebSocket 사용 (추가 gem 필요)
+    forwarder = WhatsappWebhookForwarderService.new(webhook_data)
+
     forwarder.forward_via_tcp       # TCP Socket 사용
   end
 

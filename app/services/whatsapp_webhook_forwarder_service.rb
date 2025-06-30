@@ -84,8 +84,12 @@ class WhatsappWebhookForwarderService
         socket = TCPSocket.new('partner.ttgo.dev', 5010)
         
         # 간단한 프로토콜: 데이터 길이 + 구분자 + JSON 데이터
-        json_data = @webhook_data.to_json
-        message = "#{json_data.length}\n#{json_data}"
+        
+        raw_data = { type: 'whatsapp_webhook' }.merge(@webhook_data)
+        json_data = raw_data.to_json
+
+        #json_data = @webhook_data.to_json
+        message = "#{json_data}"
         
         socket.write(message)
         response = socket.read
