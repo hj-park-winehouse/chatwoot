@@ -55,13 +55,13 @@ class Webhooks::WhatsappController < ActionController::API
     # 1. HTTP POST (현재 구현 - 가장 안정적)
     # forward_via_rest_client(webhook_data)
     
+    forwarder = WhatsappWebhookForwarderService.new(webhook_data)
     # 2. 다른 방법들 (필요시 주석 해제)
     # forwarder = WhatsappWebhookForwarderService.new(webhook_data)
-    # forwarder.forward_via_http      # Net::HTTP 사용
+    forwarder.forward_via_http      # Net::HTTP 사용
     # forwarder.forward_via_websocket # WebSocket 사용 (추가 gem 필요)
-    forwarder = WhatsappWebhookForwarderService.new(webhook_data)
 
-    forwarder.forward_via_tcp       # TCP Socket 사용
+    #forwarder.forward_via_tcp       # TCP Socket 사용
   end
 
   def forward_via_rest_client(webhook_data)

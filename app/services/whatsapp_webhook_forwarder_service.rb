@@ -5,7 +5,7 @@ class WhatsappWebhookForwarderService
 
   def initialize(webhook_data)
     @webhook_data = webhook_data
-    @target_url = 'https://partner.ttgo.dev:5010/whatsapp-webhook'
+    @target_url = 'https://partner.ttgo.dev:5012/whatsapp-webhook'
     @error_code = extract_error_code
   end
 
