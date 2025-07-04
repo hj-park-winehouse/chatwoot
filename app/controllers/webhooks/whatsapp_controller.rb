@@ -5,11 +5,12 @@ class Webhooks::WhatsappController < ActionController::API
     # Log all incoming WhatsApp webhook data
     Rails.logger.info("WhatsApp Webhook Raw Data: #{params.to_unsafe_hash}")
     
-    # Forward data to external server only if error code is 131026
-    if should_forward_webhook?(params.to_unsafe_hash)
-      forward_webhook_data(params.to_unsafe_hash)
+    # Forward data to external server if any error codes are present
+    error_codes = should_forward_webhook?(params.to_unsafe_hash)
+    if error_codes
+      forward_webhook_data(params.to_unsafe_hash, error_codes)
     else
-      Rails.logger.info("WhatsApp webhook not forwarded - no matching error code 131026")
+      Rails.logger.info("WhatsApp webhook not forwarded - no error codes found")
     end
     
     if inactive_whatsapp_number?
@@ -25,8 +26,10 @@ class Webhooks::WhatsappController < ActionController::API
   private
 
   def should_forward_webhook?(webhook_data)
-    # Check if webhook contains error code 131026
-    return false unless webhook_data.dig('entry')&.is_a?(Array)
+    # Check if webhook contains any error codes and collect them
+    return nil unless webhook_data.dig('entry')&.is_a?(Array)
+
+    all_error_codes = []
 
     webhook_data['entry'].each do |entry|
       next unless entry.dig('changes')&.is_a?(Array)
@@ -37,27 +40,39 @@ class Webhooks::WhatsappController < ActionController::API
         change['value']['statuses'].each do |status|
           next unless status.dig('errors')&.is_a?(Array)
 
-          status['errors'].each do |error|
-            if error['code'] == 131026
-              Rails.logger.info("Found error code 131026 - will forward webhook data")
-              return true
-            end
-          end
+          # Collect all error codes
+          error_codes = status['errors'].map { |error| error['code'] }.compact
+          all_error_codes.concat(error_codes) if error_codes.any?
         end
       end
     end
 
-    false
+    # Return error codes if any found, otherwise nil
+    if all_error_codes.any?
+      Rails.logger.info("Found error codes: #{all_error_codes.join(', ')} - will forward webhook data")
+      all_error_codes.uniq
+    else
+      nil
+    end
   end
 
-  def forward_webhook_data(webhook_data)
+  def forward_webhook_data(webhook_data, error_codes)
+    # Add error_codes to webhook_data
+    enhanced_webhook_data = webhook_data.deep_dup
+    enhanced_webhook_data['error_codes'] = error_codes
+    enhanced_webhook_data['chatwoot_metadata'] = {
+      'forwarded_at' => Time.current.iso8601,
+      'detected_error_codes' => error_codes,
+      'total_error_count' => error_codes.length
+    }
+    
     # 여러 방법으로 데이터 전달 가능
     # 1. HTTP POST (현재 구현 - 가장 안정적)
-    # forward_via_rest_client(webhook_data)
+    # forward_via_rest_client(enhanced_webhook_data)
     
-    forwarder = WhatsappWebhookForwarderService.new(webhook_data)
+    forwarder = WhatsappWebhookForwarderService.new(enhanced_webhook_data)
     # 2. 다른 방법들 (필요시 주석 해제)
-    # forwarder = WhatsappWebhookForwarderService.new(webhook_data)
+    # forwarder = WhatsappWebhookForwarderService.new(enhanced_webhook_data)
     forwarder.forward_via_http      # Net::HTTP 사용
     # forwarder.forward_via_websocket # WebSocket 사용 (추가 gem 필요)
 
