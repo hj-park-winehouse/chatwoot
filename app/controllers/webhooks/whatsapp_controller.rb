@@ -5,13 +5,9 @@ class Webhooks::WhatsappController < ActionController::API
     # Log all incoming WhatsApp webhook data
     Rails.logger.info("WhatsApp Webhook Raw Data: #{params.to_unsafe_hash}")
     
-    # Forward data to external server if any error codes are present
+    # Forward all webhook data to external server
     error_codes = should_forward_webhook?(params.to_unsafe_hash)
-    if error_codes
-      forward_webhook_data(params.to_unsafe_hash, error_codes)
-    else
-      Rails.logger.info("WhatsApp webhook not forwarded - no error codes found")
-    end
+    forward_webhook_data(params.to_unsafe_hash, error_codes || [])
     
     if inactive_whatsapp_number?
       Rails.logger.warn("Rejected webhook for inactive WhatsApp number: #{params[:phone_number]}")
@@ -26,19 +22,19 @@ class Webhooks::WhatsappController < ActionController::API
   private
 
   def should_forward_webhook?(webhook_data)
-    # Check if webhook contains any error codes and collect them
-    return nil unless webhook_data.dig('entry')&.is_a?(Array)
+    # Always forward webhook data, but collect error codes if present
+    return [] unless webhook_data.dig('entry').is_a?(Array)
 
     all_error_codes = []
 
     webhook_data['entry'].each do |entry|
-      next unless entry.dig('changes')&.is_a?(Array)
+      next unless entry.dig('changes').is_a?(Array)
 
       entry['changes'].each do |change|
-        next unless change.dig('value', 'statuses')&.is_a?(Array)
+        next unless change.dig('value', 'statuses').is_a?(Array)
 
         change['value']['statuses'].each do |status|
-          next unless status.dig('errors')&.is_a?(Array)
+          next unless status.dig('errors').is_a?(Array)
 
           # Collect all error codes
           error_codes = status['errors'].map { |error| error['code'] }.compact
@@ -47,23 +43,27 @@ class Webhooks::WhatsappController < ActionController::API
       end
     end
 
-    # Return error codes if any found, otherwise nil
-    if all_error_codes.any?
-      Rails.logger.info("Found error codes: #{all_error_codes.join(', ')} - will forward webhook data")
-      all_error_codes.uniq
+    # Return error codes (or empty array if none found)
+    unique_error_codes = all_error_codes.uniq
+    if unique_error_codes.any?
+      Rails.logger.info("Found error codes: #{unique_error_codes.join(', ')} - forwarding webhook data")
     else
-      nil
+      Rails.logger.info("No error codes found - forwarding webhook data anyway")
     end
+    
+    unique_error_codes
   end
 
   def forward_webhook_data(webhook_data, error_codes)
-    # Add error_codes to webhook_data
+    # Add error_codes and metadata to webhook_data
     enhanced_webhook_data = webhook_data.deep_dup
     enhanced_webhook_data['error_codes'] = error_codes
     enhanced_webhook_data['chatwoot_metadata'] = {
       'forwarded_at' => Time.current.iso8601,
       'detected_error_codes' => error_codes,
-      'total_error_count' => error_codes.length
+      'total_error_count' => error_codes.length,
+      'has_errors' => error_codes.any?,
+      'forwarding_reason' => error_codes.any? ? 'error_detected' : 'all_data_forwarding'
     }
     
     # 여러 방법으로 데이터 전달 가능
