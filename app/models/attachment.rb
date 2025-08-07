@@ -59,21 +59,27 @@ class Attachment < ApplicationRecord
     file.attached? ? file.blob.url : ''
   end
 
-  # Direct URL without redirect for Telegram - uses rails_blob_path for direct access
+  # Direct URL without redirect for Telegram - uses full URL with host
   def telegram_download_url
     return '' unless file.attached?
 
     ActiveStorage::Current.url_options = Rails.application.routes.default_url_options if ActiveStorage::Current.url_options.blank?
 
-    # For local storage service, use disk controller path
+    # For local storage service, construct full URL manually
     if file.blob.service.is_a?(ActiveStorage::Service::DiskService)
-      Rails.application.routes.url_helpers.rails_storage_proxy_path(file, only_path: false)
+      # Get the base URL from default_url_options
+      base_url = "#{ActiveStorage::Current.url_options[:protocol] || 'https'}://#{ActiveStorage::Current.url_options[:host]}"
+      base_url += ":#{ActiveStorage::Current.url_options[:port]}" if ActiveStorage::Current.url_options[:port].present?
+
+      # Use disk controller path for direct file access
+      path = Rails.application.routes.url_helpers.rails_storage_proxy_path(file)
+      "#{base_url}#{path}"
     elsif file.blob.service.respond_to?(:url)
       # For cloud services like S3, use direct service URL
       file.blob.service.url(file.blob.key, disposition: 'inline')
     else
-      # Fallback to standard URL
-      Rails.application.routes.url_helpers.rails_blob_path(file, disposition: 'inline', only_path: false)
+      # Fallback to blob URL with full host information
+      file.blob.url
     end
   rescue StandardError => e
     Rails.logger.error "Error generating telegram_download_url: #{e.message}"
