@@ -59,12 +59,23 @@ class Attachment < ApplicationRecord
     file.attached? ? file.blob.url : ''
   end
 
-  # Direct URL without redirect for Telegram - uses service_url instead of blob.url
+  # Direct URL without redirect for Telegram - uses rails_blob_path for direct access
   def telegram_download_url
     return '' unless file.attached?
 
     ActiveStorage::Current.url_options = Rails.application.routes.default_url_options if ActiveStorage::Current.url_options.blank?
-    file.blob.service_url
+
+    # Try different methods based on storage service
+    if file.blob.service.respond_to?(:url)
+      # For services like S3, use direct service URL
+      file.blob.service.url(file.blob.key, disposition: 'inline')
+    else
+      # For local storage, use rails blob path without redirect
+      Rails.application.routes.url_helpers.rails_blob_path(file, disposition: 'inline', only_path: false)
+    end
+  rescue StandardError
+    # Fallback to file_url if service methods fail
+    file_url
   end
 
   def thumb_url

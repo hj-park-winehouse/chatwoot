@@ -49,7 +49,7 @@ class Telegram::SendAttachmentsService
 
     message.attachments.each do |attachment|
       type = attachment_type(attachment[:file_type])
-      #attachment_data = { type: type, media: attachment.download_url, attachment: attachment }
+      # Use telegram_download_url to avoid 302 redirects for external services
       attachment_data = { type: type, media: attachment.telegram_download_url, attachment: attachment }
 
       case type
