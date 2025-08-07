@@ -68,17 +68,13 @@ class Attachment < ApplicationRecord
 
     # For local storage service, construct full URL manually
     if file.blob.service.is_a?(ActiveStorage::Service::DiskService)
-      # Get the base URL from url_options, handling protocol properly
-      protocol = url_options[:protocol] || 'https'
+      # Build base URL safely - ensure no protocol duplication
+      protocol = 'https'
+      host = url_options[:host]
+      port = url_options[:port]
 
-      # If protocol already includes ://, use it as is, otherwise add ://
-      base_url = if protocol.include?('://')
-                   "#{protocol}#{url_options[:host]}"
-                 else
-                   "#{protocol}://#{url_options[:host]}"
-                 end
-
-      base_url += ":#{url_options[:port]}" if url_options[:port].present?
+      base_url = "#{protocol}://#{host}"
+      base_url += ":#{port}" if port.present?
 
       # Use disk controller path for direct file access
       path = Rails.application.routes.url_helpers.rails_storage_proxy_path(file)
