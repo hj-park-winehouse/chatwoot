@@ -64,12 +64,13 @@ class Attachment < ApplicationRecord
     return '' unless file.attached?
 
     ActiveStorage::Current.url_options = Rails.application.routes.default_url_options if ActiveStorage::Current.url_options.blank?
+    url_options = ActiveStorage::Current.url_options
 
     # For local storage service, construct full URL manually
     if file.blob.service.is_a?(ActiveStorage::Service::DiskService)
-      # Get the base URL from default_url_options
-      base_url = "#{ActiveStorage::Current.url_options[:protocol] || 'https'}://#{ActiveStorage::Current.url_options[:host]}"
-      base_url += ":#{ActiveStorage::Current.url_options[:port]}" if ActiveStorage::Current.url_options[:port].present?
+      # Get the base URL from url_options
+      base_url = "#{url_options[:protocol] || 'https'}://#{url_options[:host]}"
+      base_url += ":#{url_options[:port]}" if url_options[:port].present?
 
       # Use disk controller path for direct file access
       path = Rails.application.routes.url_helpers.rails_storage_proxy_path(file)
