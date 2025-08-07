@@ -49,7 +49,9 @@ class Telegram::SendAttachmentsService
 
     message.attachments.each do |attachment|
       type = attachment_type(attachment[:file_type])
-      attachment_data = { type: type, media: attachment.download_url, attachment: attachment }
+      #attachment_data = { type: type, media: attachment.download_url, attachment: attachment }
+      attachment_data = { type: type, media: attachment.telegram_download_url, attachment: attachment }
+
       case type
       when 'document'
         attachments_by_type[:document] << attachment_data

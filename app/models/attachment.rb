@@ -59,6 +59,14 @@ class Attachment < ApplicationRecord
     file.attached? ? file.blob.url : ''
   end
 
+  # Direct URL without redirect for Telegram - uses service_url instead of blob.url
+  def telegram_download_url
+    return '' unless file.attached?
+
+    ActiveStorage::Current.url_options = Rails.application.routes.default_url_options if ActiveStorage::Current.url_options.blank?
+    file.blob.service_url
+  end
+
   def thumb_url
     if file.attached? && file.representable?
       url_for(file.representation(resize_to_fill: [250, nil]))
