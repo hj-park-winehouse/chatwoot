@@ -65,16 +65,19 @@ class Attachment < ApplicationRecord
 
     ActiveStorage::Current.url_options = Rails.application.routes.default_url_options if ActiveStorage::Current.url_options.blank?
 
-    # Try different methods based on storage service
-    if file.blob.service.respond_to?(:url)
-      # For services like S3, use direct service URL
+    # For local storage service, use disk controller path
+    if file.blob.service.is_a?(ActiveStorage::Service::DiskService)
+      Rails.application.routes.url_helpers.rails_storage_proxy_path(file, only_path: false)
+    elsif file.blob.service.respond_to?(:url)
+      # For cloud services like S3, use direct service URL
       file.blob.service.url(file.blob.key, disposition: 'inline')
     else
-      # For local storage, use rails blob path without redirect
+      # Fallback to standard URL
       Rails.application.routes.url_helpers.rails_blob_path(file, disposition: 'inline', only_path: false)
     end
-  rescue StandardError
-    # Fallback to file_url if service methods fail
+  rescue StandardError => e
+    Rails.logger.error "Error generating telegram_download_url: #{e.message}"
+    # Fallback to file_url if all methods fail
     file_url
   end
 
@@ -117,9 +120,12 @@ class Attachment < ApplicationRecord
   end
 
   def file_metadata
+    # Use telegram-specific URL for telegram channels to avoid 302 redirects
+    data_url_method = message.inbox.channel_type == 'Channel::Telegram' ? telegram_download_url : file_url
+
     metadata = {
       extension: extension,
-      data_url: file_url,
+      data_url: data_url_method,
       thumb_url: thumb_url,
       file_size: file.byte_size,
       width: file.metadata[:width],
