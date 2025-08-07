@@ -69,7 +69,7 @@ class Attachment < ApplicationRecord
     # For local storage service, construct full URL manually
     if file.blob.service.is_a?(ActiveStorage::Service::DiskService)
       # Get the base URL from url_options
-      base_url = "#{url_options[:protocol] || 'https'}://#{url_options[:host]}"
+      base_url = "#{url_options[:protocol]}"
       base_url += ":#{url_options[:port]}" if url_options[:port].present?
 
       # Use disk controller path for direct file access
