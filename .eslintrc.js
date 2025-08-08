@@ -231,7 +231,7 @@ module.exports = {
     'vue/component-definition-name-casing': 'off',
     'vue/singleline-html-element-content-newline': 'off',
     'import/extensions': ['off'],
-    'no-console': 'error',
+    'no-console': 'off',
     '@intlify/vue-i18n/no-dynamic-keys': 'warn',
     '@intlify/vue-i18n/no-unused-keys': [
       'warn',

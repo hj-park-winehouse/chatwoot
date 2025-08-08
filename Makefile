@@ -1,6 +1,6 @@
 # Variables
 APP_NAME := chatwoot
-RAILS_ENV ?= development
+RAILS_ENV ?= production
 
 # Targets
 setup:
@@ -18,7 +18,7 @@ db_seed:
 	RAILS_ENV=$(RAILS_ENV) bundle exec rails db:seed
 
 db_reset:
-	RAILS_ENV=$(RAILS_ENV) bundle exec rails db:reset
+	RAILS_ENV=$(RAILS_ENV) DISABLE_DATABASE_ENVIRONMENT_CHECK=1 bundle exec rails db:reset
 
 db:
 	RAILS_ENV=$(RAILS_ENV) bundle exec rails db:chatwoot_prepare
@@ -31,6 +31,20 @@ server:
 
 burn:
 	bundle && pnpm install
+
+prod:
+	@if [ -f ./.overmind.sock ]; then \
+		echo "Overmind is already running. Use 'make force_run' to start a new instance."; \
+	else \
+		overmind start -f Procfile.prod; \
+	fi
+
+prod-background:
+	@if [ -f ./.overmind.sock ]; then \
+                echo "Overmind is already running. Use 'make force_run' to start a new instance."; \
+        else \
+	nohup overmind start -f Procfile.prod > log.txt 2>&1 & \
+        fi
 
 run:
 	@if [ -f ./.overmind.sock ]; then \
@@ -59,4 +73,5 @@ debug_worker:
 docker: 
 	docker build -t $(APP_NAME) -f ./docker/Dockerfile .
 
-.PHONY: setup db_create db_migrate db_seed db_reset db console server burn docker run force_run force_run_tunnel debug debug_worker
+.PHONY: setup db_create db_migrate db_seed db_reset db console server burn prod prod-background docker run force_run force_run_tunnel debug debug_worker
+

@@ -50,6 +50,14 @@ class Telegram::SendAttachmentsService
     message.attachments.each do |attachment|
       type = attachment_type(attachment[:file_type])
       attachment_data = { type: type, media: attachment.download_url, attachment: attachment }
+
+      Rails.logger.info '=== ATTACHMENT URL DEBUG ==='
+      Rails.logger.info "File Type: #{attachment[:file_type]}"
+      Rails.logger.info "Telegram Type: #{type}"
+      Rails.logger.info "Download URL: #{attachment.download_url}"
+      Rails.logger.info "File URL: #{attachment.file_url}"
+      Rails.logger.info '============================'
+
       case type
       when 'document'
         attachments_by_type[:document] << attachment_data
@@ -75,6 +83,26 @@ class Telegram::SendAttachmentsService
                     media: attachments.map { |hash| hash.except(:attachment) }.to_json,
                     reply_to_message_id: reply_to_message_id
                   })
+    request_body = {
+      chat_id: chat_id,
+      media: attachments.map { |hash| hash.except(:attachment) }.to_json,
+      reply_to_message_id: reply_to_message_id
+    }
+
+    Rails.logger.info '=== TELEGRAM MEDIA GROUP REQUEST ==='
+    Rails.logger.info "URL: #{channel.telegram_api_url}/sendMediaGroup"
+    Rails.logger.info "Request Body: #{request_body.to_json}"
+    Rails.logger.info "Media JSON: #{request_body[:media]}"
+    Rails.logger.info '==========================================='
+
+    response = HTTParty.post("#{channel.telegram_api_url}/sendMediaGroup", body: request_body)
+
+    Rails.logger.info '=== TELEGRAM MEDIA GROUP RESPONSE ==='
+    Rails.logger.info "Status: #{response.code}"
+    Rails.logger.info "Response: #{response.body}"
+    Rails.logger.info '======================================='
+
+    response
   end
 
   def send_individual_attachments(attachments)

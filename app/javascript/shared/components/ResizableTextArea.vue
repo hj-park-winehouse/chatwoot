@@ -47,6 +47,8 @@ export default {
     'input',
     'blur',
     'focus',
+    'compositionstart',
+    'compositionend',
   ],
   data() {
     return {
@@ -59,6 +61,7 @@ export default {
         },
         TYPING_INDICATOR_IDLE_TIME
       ),
+      isComposing: false,
     };
   },
   computed: {
@@ -139,12 +142,26 @@ export default {
       }
     },
     onInput(event) {
+      console.log('onInput', event.target.value);
       this.$emit('update:modelValue', event.target.value);
       this.$emit('input', event.target.value);
       this.resizeTextarea();
     },
     onKeyup() {
       this.typingIndicator.start();
+    },
+    onCompositionStart() {
+      this.isComposing = true;
+      console.log('compositionstart2');
+      this.$emit('compositionstart');
+    },
+    onCompositionEnd() {
+      this.isComposing = false;
+      // IME 입력이 완료되면 타이핑 인디케이터 시작
+      this.typingIndicator.start();
+      console.log('compositionend2');
+
+      this.$emit('compositionend');
     },
     onBlur() {
       this.typingIndicator.stop();

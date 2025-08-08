@@ -1,6 +1,4 @@
 {
-    "cSpell.words": [
-        "chatwoot",
-        "dompurify"
-    ]
+  "cSpell.words": ["chatwoot", "dompurify"],
+  "editor.formatOnSave": false
 }

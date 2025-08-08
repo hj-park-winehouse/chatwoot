@@ -118,6 +118,7 @@ export default {
       newConversationModalActive: false,
       showArticleSearchPopover: false,
       hasRecordedAudio: false,
+      isComposing: false, // IME 입력 상태 추가
     };
   },
   computed: {
@@ -458,6 +459,8 @@ export default {
   },
 
   mounted() {
+    console.log('ReplyBox mounted');
+    console.log('ReplyBox mounted2');
     this.getFromDraft();
     // Don't use the keyboard listener mixin here as the events here are supposed to be
     // working even if input/textarea is focussed.
@@ -613,6 +616,12 @@ export default {
         },
         '$mod+Enter': {
           action: () => {
+            // IME 입력 중일 때는 이벤트 처리하지 않음
+            // if (this.isComposing) {
+            //   e.preventDefault();
+            //   return;
+            // }
+
             if (this.isAValidEvent('cmd_enter')) {
               this.onSendReply();
             }
@@ -628,6 +637,7 @@ export default {
         !this.showCannedMenu &&
         !this.showVariablesMenu &&
         this.isFocused &&
+        !this.isComposing && // IME 입력 중일 때는 키보드 이벤트 무시
         this.isEditorHotKeyEnabled(selectedKey)
       );
     },
@@ -705,6 +715,9 @@ export default {
         if (!this.isPrivate) {
           this.clearEmailField();
         }
+
+        // IME 상태 정리를 위해 먼저 상태를 초기화
+        this.isComposing = false;
 
         this.clearMessage();
         this.hideEmojiPicker();
@@ -829,6 +842,8 @@ export default {
     },
     clearMessage() {
       this.message = '';
+      this.isComposing = false; // IME 상태도 초기화
+
       if (this.sendWithSignature && !this.isPrivate) {
         // if signature is enabled, append it to the message
         this.message = appendSignature(this.message, this.signatureToApply);
@@ -837,6 +852,16 @@ export default {
       this.isRecordingAudio = false;
       this.resetReplyToMessage();
       this.resetAudioRecorderInput();
+
+      // 입력 필드 강제 초기화 (IME 상태 정리)
+      this.$nextTick(() => {
+        if (this.$refs.messageInput && this.$refs.messageInput.$refs.textarea) {
+          const textarea = this.$refs.messageInput.$refs.textarea;
+          textarea.value = this.message;
+          textarea.blur();
+          textarea.focus();
+        }
+      });
     },
     clearEmailField() {
       this.ccEmails = '';
@@ -885,6 +910,18 @@ export default {
     },
     onFocus() {
       this.isFocused = true;
+    },
+    onCompositionStart() {
+      this.isComposing = true;
+      console.log('Composition started');
+    },
+    onCompositionEnd() {
+      this.isComposing = false;
+      console.log('Composition ended');
+      // IME 입력 완료 후 잠시 대기하여 입력 상태 정리
+      // this.$nextTick(() => {
+      //   this.isComposing = false;
+      // });
     },
     onRecordProgressChanged(duration) {
       this.recordingAudioDurationText = duration;
@@ -1156,6 +1193,7 @@ export default {
         @play="recordingAudioState = 'playing'"
         @pause="recordingAudioState = 'paused'"
       />
+      <!-- ReplyBox -->
       <ResizableTextArea
         v-else-if="!showRichContentEditor"
         ref="messageInput"
@@ -1170,7 +1208,10 @@ export default {
         @typing-on="onTypingOn"
         @focus="onFocus"
         @blur="onBlur"
+        @compositionstart="onCompositionStart"
+        @compositionend="onCompositionEnd"
       />
+      <!-- Private Note -->
       <WootMessageEditor
         v-else
         v-model="message"
@@ -1193,6 +1234,8 @@ export default {
         @toggle-canned-menu="toggleCannedMenu"
         @toggle-variables-menu="toggleVariablesMenu"
         @clear-selection="clearEditorSelection"
+        @compositionstart="onCompositionStart"
+        @compositionend="onCompositionEnd"
       />
     </div>
     <div

@@ -6,6 +6,12 @@ local:
   service: Disk
   root: <%= Rails.root.join("storage") %>
 
+# Public storage - files stored in public directory, accessible via URL
+public:
+  service: Disk
+  root: <%= Rails.root.join("public/uploads") %>
+  public: true
+
 # Use rails credentials:edit to set the AWS secrets (as aws:access_key_id|secret_access_key)
 amazon:
   service: S3
@@ -15,7 +21,7 @@ amazon:
   bucket: <%= ENV.fetch('S3_BUCKET_NAME', '') %>
 
 # Remember not to checkin your GCS keyfile to a repository
-google:
+google:g
   service: GCS
   project: <%= ENV.fetch('GCS_PROJECT', '') %>
   credentials: <%= ENV.fetch('GCS_CREDENTIALS', '') %>

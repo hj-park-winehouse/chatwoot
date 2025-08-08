@@ -2,7 +2,12 @@ class Webhooks::WhatsappEventsJob < ApplicationJob
   queue_as :low
 
   def perform(params = {})
+    # Log processed webhook data with channel info
+    Rails.logger.info("WhatsApp Events Job - Processing params: #{params}")
+    
     channel = find_channel_from_whatsapp_business_payload(params)
+    
+    Rails.logger.info("WhatsApp Events Job - Found channel: #{channel&.phone_number || 'nil'}, Provider: #{channel&.provider || 'nil'}")
 
     if channel_is_inactive?(channel)
       Rails.logger.warn("Inactive WhatsApp channel: #{channel&.phone_number || "unknown - #{params[:phone_number]}"}")
@@ -11,10 +16,15 @@ class Webhooks::WhatsappEventsJob < ApplicationJob
 
     case channel.provider
     when 'whatsapp_cloud'
+      Rails.logger.info("WhatsApp Events Job - Using WhatsApp Cloud Service")
       Whatsapp::IncomingMessageWhatsappCloudService.new(inbox: channel.inbox, params: params).perform
     else
+      Rails.logger.info("WhatsApp Events Job - Using Default WhatsApp Service")
       Whatsapp::IncomingMessageService.new(inbox: channel.inbox, params: params).perform
     end
+  rescue StandardError => e
+    Rails.logger.error("WhatsApp Events Job Error: #{e.message}\nBacktrace: #{e.backtrace.join("\n")}")
+    raise
   end
 
   private
