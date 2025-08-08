@@ -6,12 +6,6 @@ local:
   service: Disk
   root: <%= Rails.root.join("storage") %>
 
-# Public storage - files stored in public directory, accessible via URL
-public:
-  service: Disk
-  root: <%= Rails.root.join("public/uploads") %>
-  public: true
-
 # Use rails credentials:edit to set the AWS secrets (as aws:access_key_id|secret_access_key)
 amazon:
   service: S3
