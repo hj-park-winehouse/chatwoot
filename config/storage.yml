@@ -15,7 +15,7 @@ amazon:
   bucket: <%= ENV.fetch('S3_BUCKET_NAME', '') %>
 
 # Remember not to checkin your GCS keyfile to a repository
-google:g
+google:
   service: GCS
   project: <%= ENV.fetch('GCS_PROJECT', '') %>
   credentials: <%= ENV.fetch('GCS_CREDENTIALS', '') %>
