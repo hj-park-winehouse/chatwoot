@@ -184,6 +184,15 @@ class Inbox < ApplicationRecord
     members.ids
   end
 
+  # Translation language settings
+  def source_language
+    auto_assignment_config&.dig('source_language') || 'auto'
+  end
+
+  def source_language=(language)
+    self.auto_assignment_config = (auto_assignment_config || {}).merge('source_language' => language)
+  end
+
   private
 
   def default_name_for_blank_name

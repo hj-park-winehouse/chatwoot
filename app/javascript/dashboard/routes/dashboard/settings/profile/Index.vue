@@ -51,12 +51,13 @@ export default {
   },
   data() {
     return {
-      avatarFile: '',
+      avatarFile: null,
       avatarUrl: '',
-      name: '',
       displayName: '',
       email: '',
       messageSignature: '',
+      name: '',
+      preferredLanguage: 'ko',
       hotKeys: [
         {
           key: 'enter',
@@ -100,13 +101,17 @@ export default {
   },
   methods: {
     initializeUser() {
+      console.log('Current user object:', this.currentUser);
       this.name = this.currentUser.name;
       this.email = this.currentUser.email;
       this.avatarUrl = this.currentUser.avatar_url;
       this.displayName = this.currentUser.display_name;
       this.messageSignature = this.currentUser.message_signature;
+      this.preferredLanguage = this.currentUser.preferred_language || 'ko';
+      console.log('Initialized preferredLanguage:', this.preferredLanguage);
     },
     async dispatchUpdate(payload, successMessage, errorMessage) {
+      console.log('dispatchUpdate called with payload:', payload);
       let alertMessage = '';
       try {
         await this.$store.dispatch('updateProfile', payload);
@@ -122,18 +127,24 @@ export default {
       }
     },
     async updateProfile(userAttributes) {
-      const { name, email, displayName } = userAttributes;
+      console.log('updateProfile called with:', userAttributes);
+      const { name, email, displayName, preferredLanguage } = userAttributes;
+      console.log('Extracted preferredLanguage:', preferredLanguage);
       const hasEmailChanged = this.currentUser.email !== email;
       this.name = name || this.name;
       this.email = email || this.email;
       this.displayName = displayName || this.displayName;
+      this.preferredLanguage = preferredLanguage || this.preferredLanguage;
+      console.log('Final this.preferredLanguage:', this.preferredLanguage);
 
       const updatePayload = {
         name: this.name,
         email: this.email,
         displayName: this.displayName,
+        preferredLanguage: this.preferredLanguage,
         avatar: this.avatarFile,
       };
+      console.log('updatePayload:', updatePayload);
 
       const success = await this.dispatchUpdate(
         updatePayload,
@@ -142,6 +153,11 @@ export default {
           : this.$t('PROFILE_SETTINGS.UPDATE_SUCCESS'),
         this.$t('RESET_PASSWORD.API.ERROR_MESSAGE')
       );
+
+      if (success) {
+        // Reinitialize user data after successful update
+        this.initializeUser();
+      }
 
       if (hasEmailChanged && success) clearCookiesOnLogout();
     },
@@ -209,6 +225,7 @@ export default {
         :name="name"
         :display-name="displayName"
         :email="email"
+        :preferred-language="preferredLanguage"
         :email-enabled="!globalConfig.disableUserProfileUpdate"
         @update-user="updateProfile"
       />

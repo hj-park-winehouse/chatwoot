@@ -144,6 +144,7 @@ class Message < ApplicationRecord
     )
     data[:echo_id] = echo_id if echo_id.present?
     data[:attachments] = attachments.map(&:push_event_data) if attachments.present?
+    data[:translations] = translations if translations.present?
     merge_sender_attributes(data)
   end
 
@@ -269,6 +270,7 @@ class Message < ApplicationRecord
     send_reply
     execute_message_template_hooks
     update_contact_activity
+    auto_translate_incoming_message
   end
 
   def update_contact_activity
@@ -399,6 +401,16 @@ class Message < ApplicationRecord
     # rubocop:disable Rails/SkipsModelValidations
     conversation.update_columns(last_activity_at: created_at)
     # rubocop:enable Rails/SkipsModelValidations
+  end
+
+  def auto_translate_incoming_message
+    # 상대방(Contact)이 보낸 메시지만 자동 번역
+    return unless incoming? && sender.is_a?(Contact)
+    return if content.blank?
+    return if private? # 비공개 메시지는 번역하지 않음
+
+    # 백그라운드에서 번역 실행
+    Messages::AutoTranslateJob.perform_later(id)
   end
 end
 

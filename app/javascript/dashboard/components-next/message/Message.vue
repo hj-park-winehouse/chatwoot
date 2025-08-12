@@ -128,6 +128,7 @@ const props = defineProps({
   senderId: { type: Number, default: null },
   senderType: { type: String, default: null },
   sourceId: { type: String, default: '' }, // eslint-disable-line vue/no-unused-properties
+  // translations: { type: Object, default: () => ({}) },
 });
 
 const contextMenuPosition = ref({});

@@ -126,11 +126,14 @@ export const actions = {
   },
 
   updateProfile: async ({ commit }, params) => {
+    console.log('Vuex updateProfile action called with params:', params);
     // eslint-disable-next-line no-useless-catch
     try {
       const response = await authAPI.profileUpdate(params);
+      console.log('Vuex updateProfile response:', response.data);
       commit(types.SET_CURRENT_USER, response.data);
     } catch (error) {
+      console.error('Vuex updateProfile error:', error);
       throw error;
     }
   },

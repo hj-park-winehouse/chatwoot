@@ -600,7 +600,11 @@
       "WHATSAPP_SECTION_UPDATE_BUTTON": "Update",
       "WHATSAPP_WEBHOOK_TITLE": "Webhook Verification Token",
       "WHATSAPP_WEBHOOK_SUBHEADER": "This token is used to verify the authenticity of the webhook endpoint.",
-      "UPDATE_PRE_CHAT_FORM_SETTINGS": "Update Pre Chat Form Settings"
+      "UPDATE_PRE_CHAT_FORM_SETTINGS": "Update Pre Chat Form Settings",
+      "SOURCE_LANGUAGE": {
+        "LABEL": "Source Language",
+        "HELP_TEXT": "Select the primary language of messages coming into this inbox. This helps with auto-translation for agents."
+      }
     },
     "HELP_CENTER": {
       "LABEL": "Help Center",

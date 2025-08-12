@@ -74,6 +74,20 @@ export default {
       selectedPortalSlug: '',
       showBusinessNameInput: false,
       welcomeTaglineEditorMenuOptions: WIDGET_BUILDER_EDITOR_MENU_OPTIONS,
+      sourceLanguage: 'auto',
+      languageOptions: [
+        { key: 'auto', label: 'Auto Detect' },
+        { key: 'en', label: 'English' },
+        { key: 'ko', label: '한국어' },
+        { key: 'ja', label: '日本語' },
+        { key: 'zh', label: '中文' },
+        { key: 'es', label: 'Español' },
+        { key: 'fr', label: 'Français' },
+        { key: 'de', label: 'Deutsch' },
+        { key: 'pt', label: 'Português' },
+        { key: 'ru', label: 'Русский' },
+        { key: 'ar', label: 'العربية' },
+      ],
     };
   },
   computed: {
@@ -286,23 +300,24 @@ export default {
       this.$store.dispatch('teams/get');
       this.$store.dispatch('labels/get');
       this.$store.dispatch('inboxes/get').then(() => {
-        this.avatarUrl = this.inbox.avatar_url;
-        this.selectedInboxName = this.inbox.name;
-        this.webhookUrl = this.inbox.webhook_url;
+        this.avatarUrl = this.inbox.avatar_url || '';
+        this.selectedInboxName = this.inbox.name || '';
+        this.webhookUrl = this.inbox.webhook_url || '';
         this.greetingEnabled = this.inbox.greeting_enabled || false;
         this.greetingMessage = this.inbox.greeting_message || '';
-        this.emailCollectEnabled = this.inbox.enable_email_collect;
-        this.senderNameType = this.inbox.sender_name_type;
-        this.businessName = this.inbox.business_name;
+        this.emailCollectEnabled = this.inbox.enable_email_collect || false;
+        this.senderNameType = this.inbox.sender_name_type || 'friendly';
+        this.businessName = this.inbox.business_name || '';
         this.allowMessagesAfterResolved =
-          this.inbox.allow_messages_after_resolved;
-        this.continuityViaEmail = this.inbox.continuity_via_email;
-        this.channelWebsiteUrl = this.inbox.website_url;
-        this.channelWelcomeTitle = this.inbox.welcome_title;
-        this.channelWelcomeTagline = this.inbox.welcome_tagline;
+          this.inbox.allow_messages_after_resolved !== undefined ? this.inbox.allow_messages_after_resolved : true;
+        this.continuityViaEmail = this.inbox.continuity_via_email !== undefined ? this.inbox.continuity_via_email : true;
+        this.channelWebsiteUrl = this.inbox.website_url || '';
+        this.channelWelcomeTitle = this.inbox.welcome_title || '';
+        this.channelWelcomeTagline = this.inbox.welcome_tagline || '';
         this.selectedFeatureFlags = this.inbox.selected_feature_flags || [];
-        this.replyTime = this.inbox.reply_time;
-        this.locktoSingleConversation = this.inbox.lock_to_single_conversation;
+        this.replyTime = this.inbox.reply_time || 'in_a_few_minutes';
+        this.locktoSingleConversation = this.inbox.lock_to_single_conversation || false;
+        this.sourceLanguage = this.inbox.source_language || 'auto';
         this.selectedPortalSlug = this.inbox.help_center
           ? this.inbox.help_center.slug
           : '';
@@ -312,7 +327,7 @@ export default {
       try {
         const payload = {
           id: this.currentInboxId,
-          name: this.selectedInboxName,
+          name: this.selectedInboxName || this.inbox.name,
           enable_email_collect: this.emailCollectEnabled,
           allow_messages_after_resolved: this.allowMessagesAfterResolved,
           greeting_enabled: this.greetingEnabled,
@@ -323,12 +338,13 @@ export default {
               ).id
             : null,
           lock_to_single_conversation: this.locktoSingleConversation,
-          sender_name_type: this.senderNameType,
+          sender_name_type: this.senderNameType || this.inbox.sender_name_type,
           business_name: this.businessName || null,
+          source_language: this.sourceLanguage,
           channel: {
             widget_color: this.inbox.widget_color,
-            website_url: this.channelWebsiteUrl,
-            webhook_url: this.webhookUrl,
+            website_url: this.channelWebsiteUrl || this.inbox.website_url,
+            webhook_url: this.webhookUrl || this.inbox.webhook_url,
             welcome_title: this.channelWelcomeTitle || '',
             welcome_tagline: this.channelWelcomeTagline || '',
             selectedFeatureFlags: this.selectedFeatureFlags,
@@ -561,6 +577,24 @@ export default {
               :richtext="!textAreaChannels"
             />
           </div>
+          
+          <!-- Translation Language Settings -->
+          <label class="pb-4">
+            {{ $t('INBOX_MGMT.SETTINGS_POPUP.SOURCE_LANGUAGE.LABEL') }}
+            <select v-model="sourceLanguage">
+              <option
+                v-for="option in languageOptions"
+                :key="option.key"
+                :value="option.key"
+              >
+                {{ option.label }}
+              </option>
+            </select>
+            <p class="pb-1 text-sm not-italic text-n-slate-11">
+              {{ $t('INBOX_MGMT.SETTINGS_POPUP.SOURCE_LANGUAGE.HELP_TEXT') }}
+            </p>
+          </label>
+
           <label v-if="isAWebWidgetInbox" class="pb-4">
             {{ $t('INBOX_MGMT.ADD.WEBSITE_CHANNEL.REPLY_TIME.TITLE') }}
             <select v-model="replyTime">

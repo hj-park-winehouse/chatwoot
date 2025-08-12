@@ -37,8 +37,65 @@ class Api::V1::Accounts::Conversations::MessagesController < Api::V1::Accounts::
   end
 
   def translate
-    return head :ok if already_translated_content_available?
+    Rails.logger.info "MessagesController#translate: Starting translation for message ID #{message.id}"
+    Rails.logger.debug do
+      "MessagesController#translate: Target language: #{permitted_params[:target_language]}, Provider: #{permitted_params[:provider] || 'google'}"
+    end
 
+    if already_translated_content_available?
+      Rails.logger.info 'MessagesController#translate: Translation already available, returning cached result'
+
+      # 수동 번역은 언어별로 저장됨 (기존 방식)
+      cached_translation = message.translations[permitted_params[:target_language]]
+
+      return render json: {
+        original_content: message.content,
+        translated_content: cached_translation,
+        target_language: permitted_params[:target_language],
+        provider: 'cached'
+      }
+    end
+
+    # Inbox에서 source_language 가져오기 (자동 번역과 동일한 방식)
+    source_language = message.conversation.inbox.source_language || 'auto'
+
+    translation_service = Messages::TranslationService.new(
+      message: message,
+      target_language: permitted_params[:target_language],
+      provider: permitted_params[:provider] || 'google',
+      source_language: source_language,
+      is_manual: true
+    )
+
+    Rails.logger.debug 'MessagesController#translate: Calling translation service'
+    result = translation_service.perform
+
+    if result[:success]
+      Rails.logger.info 'MessagesController#translate: Translation successful'
+
+      # 메시지가 변경되었음을 클라이언트에 알림
+      message.reload
+      Rails.logger.debug 'MessagesController#translate: Broadcasting message update'
+
+      render json: {
+        original_content: message.content,
+        translated_content: result[:translated_content],
+        target_language: permitted_params[:target_language],
+        provider: result[:provider]
+      }
+    else
+      Rails.logger.error "MessagesController#translate: Translation failed - #{result[:error]}"
+      render json: { error: result[:error] }, status: :unprocessable_entity
+    end
+  rescue StandardError => e
+    Rails.logger.error "MessagesController#translate: Unexpected error - #{e.message}"
+    Rails.logger.error "MessagesController#translate: Backtrace: #{e.backtrace.first(3).join(', ')}"
+    render json: { error: 'Translation service unavailable' }, status: :internal_server_error
+  end
+
+  private
+
+  def legacy_translate_method
     translated_content = Integrations::GoogleTranslate::ProcessorService.new(
       message: message,
       target_language: permitted_params[:target_language]
@@ -54,8 +111,6 @@ class Api::V1::Accounts::Conversations::MessagesController < Api::V1::Accounts::
     render json: { content: translated_content }
   end
 
-  private
-
   def message
     @message ||= @conversation.messages.find(permitted_params[:id])
   end
@@ -65,10 +120,11 @@ class Api::V1::Accounts::Conversations::MessagesController < Api::V1::Accounts::
   end
 
   def permitted_params
-    params.permit(:id, :target_language, :status, :external_error)
+    params.permit(:id, :target_language, :provider, :status, :external_error)
   end
 
   def already_translated_content_available?
+    # 수동 번역은 기존 방식으로만 확인 (언어별 번역)
     message.translations.present? && message.translations[permitted_params[:target_language]].present?
   end
 

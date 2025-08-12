@@ -31,6 +31,12 @@ server:
 
 burn:
 	bundle && pnpm install
+dev: 
+	@if [ -f ./.overmind.sock ]; then \
+		echo "Overmind is already running. Use 'make force_run' to start a new instance."; \
+	else \
+		overmind start -f Procfile.dev; \
+	fi
 
 prod:
 	@if [ -f ./.overmind.sock ]; then \

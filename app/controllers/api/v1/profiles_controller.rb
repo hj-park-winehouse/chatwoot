@@ -4,15 +4,28 @@ class Api::V1::ProfilesController < Api::BaseController
   def show; end
 
   def update
+    Rails.logger.info "ProfilesController#update: profile_params = #{profile_params}"
+    Rails.logger.info "ProfilesController#update: preferred_language param = #{profile_params[:preferred_language]}"
+
     if password_params[:password].present?
       render_could_not_create_error('Invalid current password') and return unless @user.valid_password?(password_params[:current_password])
 
       @user.update!(password_params.except(:current_password))
     end
 
-    @user.assign_attributes(profile_params)
+    @user.assign_attributes(profile_params.except(:preferred_language))
+
+    # Handle preferred_language separately
+    if profile_params[:preferred_language].present?
+      Rails.logger.info "ProfilesController#update: Setting preferred_language to #{profile_params[:preferred_language]}"
+      @user.preferred_language = profile_params[:preferred_language]
+      Rails.logger.info "ProfilesController#update: After setting, preferred_language = #{@user.preferred_language}"
+    end
+
     @user.custom_attributes.merge!(custom_attributes_params)
+    Rails.logger.info 'ProfilesController#update: About to save user'
     @user.save!
+    Rails.logger.info "ProfilesController#update: User saved successfully, preferred_language = #{@user.preferred_language}"
   end
 
   def avatar
@@ -65,6 +78,7 @@ class Api::V1::ProfilesController < Api::BaseController
       :avatar,
       :message_signature,
       :account_id,
+      :preferred_language,
       ui_settings: {}
     )
   end

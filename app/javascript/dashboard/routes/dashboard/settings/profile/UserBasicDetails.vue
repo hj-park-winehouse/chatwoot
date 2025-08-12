@@ -20,6 +20,10 @@ export default {
       type: String,
       default: '',
     },
+    preferredLanguage: {
+      type: String,
+      default: 'ko',
+    },
     emailEnabled: {
       type: Boolean,
       default: false,
@@ -34,6 +38,19 @@ export default {
       userName: this.name,
       userDisplayName: this.displayName,
       userEmail: this.email,
+      userPreferredLanguage: this.preferredLanguage,
+      languageOptions: [
+        { key: 'ko', label: '한국어' },
+        { key: 'en', label: 'English' },
+        { key: 'ja', label: '日本語' },
+        { key: 'zh', label: '中文' },
+        { key: 'es', label: 'Español' },
+        { key: 'fr', label: 'Français' },
+        { key: 'de', label: 'Deutsch' },
+        { key: 'pt', label: 'Português' },
+        { key: 'ru', label: 'Русский' },
+        { key: 'ar', label: 'العربية' },
+      ],
       inputStyles: {
         borderRadius: '0.75rem',
         padding: '0.375rem 0.75rem',
@@ -72,6 +89,14 @@ export default {
       },
       immediate: true,
     },
+    preferredLanguage: {
+      handler(value) {
+        console.log('UserBasicDetails: preferredLanguage prop changed to:', value);
+        this.userPreferredLanguage = value;
+        console.log('UserBasicDetails: userPreferredLanguage set to:', this.userPreferredLanguage);
+      },
+      immediate: true,
+    },
   },
   methods: {
     async updateUser() {
@@ -84,6 +109,7 @@ export default {
         name: this.userName,
         displayName: this.userDisplayName,
         email: this.userEmail,
+        preferredLanguage: this.userPreferredLanguage,
       });
     },
   },
@@ -131,6 +157,27 @@ export default {
       @input="v$.userEmail.$touch"
       @blur="v$.userEmail.$touch"
     />
+    <div class="pb-4">
+      <label class="block text-sm font-medium text-gray-700 mb-2">
+        {{ $t('PROFILE_SETTINGS.FORM.PREFERRED_LANGUAGE.LABEL') }}
+      </label>
+      <select
+        v-model="userPreferredLanguage"
+        :style="inputStyles"
+        class="w-full border border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+      >
+        <option
+          v-for="option in languageOptions"
+          :key="option.key"
+          :value="option.key"
+        >
+          {{ option.label }}
+        </option>
+      </select>
+      <p class="text-xs text-gray-500 mt-1">
+        {{ $t('PROFILE_SETTINGS.FORM.PREFERRED_LANGUAGE.HELP_TEXT') }}
+      </p>
+    </div>
     <div>
       <NextButton type="submit" :label="$t('PROFILE_SETTINGS.BTN_TEXT')" />
     </div>

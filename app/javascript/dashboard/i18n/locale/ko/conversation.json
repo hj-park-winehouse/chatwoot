@@ -14,6 +14,20 @@
     "SEARCH_MESSAGES": "대화에서 메시지 검색",
     "VIEW_ORIGINAL": "View original",
     "VIEW_TRANSLATED": "View translated",
+    "REAL_TIME_TRANSLATION": "실시간 번역",
+    "TRANSLATING": "번역중...",
+    "TRANSLATION_PROVIDERS": {
+      "GOOGLE": "Google:",
+      "META": "Meta:"
+    },
+    "TRANSLATION_UI": {
+      "ORIGINAL_MESSAGE": "원본 메시지",
+      "SHOW_TRANSLATION": "번역 보기",
+      "HIDE_TRANSLATION": "번역 숨기기",
+      "TRANSLATE_MESSAGE": "메시지 번역하기",
+      "EXPAND_ICON": "▼",
+      "COLLAPSE_ICON": "▲"
+    },
     "EMPTY_STATE": {
       "CMD_BAR": "to open command menu",
       "KEYBOARD_SHORTCUTS": "to view keyboard shortcuts"

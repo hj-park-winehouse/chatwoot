@@ -156,6 +156,15 @@ class User < ApplicationRecord
     find_by(email: email&.downcase)
   end
 
+  # Translation language settings
+  def preferred_language
+    ui_settings&.dig('preferred_language') || 'ko'
+  end
+
+  def preferred_language=(language)
+    self.ui_settings = (ui_settings || {}).merge('preferred_language' => language)
+  end
+
   private
 
   def remove_macros

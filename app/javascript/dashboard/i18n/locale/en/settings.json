@@ -198,6 +198,10 @@
         "ERROR": "Please enter a valid email address",
         "PLACEHOLDER": "Please enter your email address, this would be displayed in conversations"
       },
+      "PREFERRED_LANGUAGE": {
+        "LABEL": "Preferred Translation Language",
+        "HELP_TEXT": "Select your preferred language for automatic message translation."
+      },
       "CURRENT_PASSWORD": {
         "LABEL": "Current password",
         "ERROR": "Please enter the current password",

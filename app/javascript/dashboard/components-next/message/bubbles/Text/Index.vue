@@ -4,12 +4,19 @@ import BaseBubble from 'next/message/bubbles/Base.vue';
 import FormattedContent from './FormattedContent.vue';
 import AttachmentChips from 'next/message/chips/AttachmentChips.vue';
 import TranslationToggle from 'dashboard/components-next/message/TranslationToggle.vue';
+import RealTimeTranslation from 'dashboard/components-next/message/RealTimeTranslation.vue';
 import { MESSAGE_TYPES } from '../../constants';
 import { useMessageContext } from '../../provider.js';
 import { useTranslations } from 'dashboard/composables/useTranslations';
 
-const { content, attachments, contentAttributes, messageType } =
-  useMessageContext();
+const {
+  content,
+  attachments,
+  contentAttributes,
+  messageType,
+  id,
+  conversationId,
+} = useMessageContext();
 
 const { hasTranslations, translationContent } =
   useTranslations(contentAttributes);
@@ -17,14 +24,27 @@ const { hasTranslations, translationContent } =
 const renderOriginal = ref(false);
 
 const renderContent = computed(() => {
+  console.log('Text/Index renderContent computed:', {
+    renderOriginal: renderOriginal.value,
+    hasTranslations: hasTranslations.value,
+    translationContent: translationContent.value,
+    contentValue: content.value,
+    typeOfTranslationContent: typeof translationContent.value,
+  });
+
   if (renderOriginal.value) {
     return content.value;
   }
 
   if (hasTranslations.value) {
+    console.log(
+      'Text/Index: Using translationContent:',
+      translationContent.value
+    );
     return translationContent.value;
   }
 
+  console.log('Text/Index: Using original content:', content.value);
   return content.value;
 });
 
@@ -53,6 +73,14 @@ const handleSeeOriginal = () => {
         class="-mt-3"
         :showing-original="renderOriginal"
         @toggle="handleSeeOriginal"
+      />
+      <!-- 실시간 번역 컴포넌트 -->
+      <RealTimeTranslation
+        v-if="content && !isEmpty"
+        :message-id="id"
+        :content="content"
+        :conversation-id="conversationId"
+        :content-attributes="contentAttributes"
       />
       <AttachmentChips :attachments="attachments" class="gap-2" />
       <template v-if="isTemplate">
