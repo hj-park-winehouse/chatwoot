@@ -50,7 +50,13 @@
       "CONTACT_LABELS": "연락처 라벨",
       "PREVIOUS_CONVERSATIONS": "이전 대화",
       "NO_RECORDS_FOUND": "No attributes found"
-    }
+    },
+    "SCANNER_INFO": "스캐너 정보",
+    "CHARGED": "충전 완료",
+    "FREE": "미충전",
+    "CHARGED_MESSAGE": "이 고객은 충전을 완료했습니다.",
+    "FREE_MESSAGE": "이 고객은 아직 충전하지 않았습니다.",
+    "CLOSE": "닫기"
   },
   "EDIT_CONTACT": {
     "BUTTON_LABEL": "연락처 수정",

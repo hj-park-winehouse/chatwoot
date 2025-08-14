@@ -63,12 +63,12 @@ const isEmpty = computed(() => {
 const showRealTimeTranslation = computed(() => {
   // 사용자의 auto_translate 설정이 true인 경우에만 실시간 번역 표시
   const autoTranslate = currentUser.value?.ui_settings?.auto_translate;
-  console.log('Text/Index showRealTimeTranslation:', {
-    autoTranslate,
-    userSettings: currentUser.value?.ui_settings,
-    content: content.value,
-    isEmpty: isEmpty.value,
-  });
+  // console.log('Text/Index showRealTimeTranslation:', {
+  //   autoTranslate,
+  //   userSettings: currentUser.value?.ui_settings,
+  //   content: content.value,
+  //   isEmpty: isEmpty.value,
+  // });
   return autoTranslate === true || autoTranslate === 'true';
 });
 

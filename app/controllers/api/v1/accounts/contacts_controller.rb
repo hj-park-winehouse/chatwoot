@@ -13,7 +13,7 @@ class Api::V1::Accounts::ContactsController < Api::V1::Accounts::BaseController
 
   before_action :check_authorization
   before_action :set_current_page, only: [:index, :active, :search, :filter]
-  before_action :fetch_contact, only: [:show, :update, :destroy, :avatar, :contactable_inboxes, :destroy_custom_attributes]
+  before_action :fetch_contact, only: [:show, :update, :destroy, :avatar, :contactable_inboxes, :destroy_custom_attributes, :scanner_info]
   before_action :set_include_contact_inboxes, only: [:index, :active, :search, :filter, :show, :update]
 
   def index
@@ -114,6 +114,56 @@ class Api::V1::Accounts::ContactsController < Api::V1::Accounts::BaseController
   def avatar
     @contact.avatar.purge if @contact.avatar.attached?
     @contact
+  end
+
+  def scanner_info
+    # contact의 mobile 번호 가져오기 (custom_attributes에서)
+    mobile = @contact.custom_attributes['mobile']
+    
+    if mobile.blank?
+      return render json: { error: 'Mobile number not found in contact' }, status: :unprocessable_entity
+    end
+
+    # Scanner API 호출
+    result = ScannerApiService.get_subscribers_info(mobile)
+    
+    # 성공적으로 데이터를 받았다면 contact를 업데이트
+    if result[:success] && result[:data]
+      scanner_data = result[:data]
+      
+      # 디버깅을 위한 로그
+      Rails.logger.info "Scanner API result: #{result.inspect}"
+      Rails.logger.info "Scanner data: #{scanner_data.inspect}"
+      
+      # custom_attributes에 scanner 정보 추가 (기존 값들을 덮어쓰지 않고 scanner 관련 데이터만 업데이트)
+      updated_attributes = @contact.custom_attributes.merge({
+        'account_no' => scanner_data[:account_no],
+        'valid_date' => scanner_data[:valid_date],
+        'last_updated' => scanner_data[:last_updated],
+        'bill' => scanner_data[:bill],
+        'bank' => scanner_data[:bank],
+        'is_charge' => scanner_data[:is_charge],
+      })
+      
+      Rails.logger.info "Updated attributes: #{updated_attributes.inspect}"
+      
+      # contact 업데이트
+      @contact.update!(custom_attributes: updated_attributes)
+      
+      render json: { 
+        success: true,
+        mobile: mobile,
+        scanner_data: scanner_data,
+        message: 'Contact updated with scanner information'
+      }
+    else
+      render json: { 
+        success: false,
+        mobile: mobile,
+        error: result[:error] || 'Scanner API failed',
+        raw_result: result
+      }, status: :unprocessable_entity
+    end
   end
 
   private

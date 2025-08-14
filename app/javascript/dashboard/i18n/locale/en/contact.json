@@ -50,7 +50,13 @@
       "CONTACT_LABELS": "Contact Labels",
       "PREVIOUS_CONVERSATIONS": "Previous Conversations",
       "NO_RECORDS_FOUND": "No attributes found"
-    }
+    },
+    "SCANNER_INFO": "Subscribers Information",
+    "CHARGED": "Top-up Completed",
+    "FREE": "Not Recharged",
+    "CHARGED_MESSAGE": "This customer has completed the top-up.",
+    "FREE_MESSAGE": "This customer has not recharged yet.",
+    "CLOSE": "Close"
   },
   "EDIT_CONTACT": {
     "BUTTON_LABEL": "Edit Contact",

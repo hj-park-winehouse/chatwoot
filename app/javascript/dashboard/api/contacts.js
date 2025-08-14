@@ -93,6 +93,10 @@ class ContactAPI extends ApiClient {
   exportContacts(queryPayload) {
     return axios.post(`${this.url}/export`, queryPayload);
   }
+
+  getScannerInfo(contactId) {
+    return axios.post(`${this.url}/${contactId}/scanner_info`);
+  }
 }
 
 export default new ContactAPI();

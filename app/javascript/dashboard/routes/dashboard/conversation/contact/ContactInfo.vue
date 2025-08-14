@@ -11,6 +11,7 @@ import ContactMergeModal from 'dashboard/modules/contact/ContactMergeModal.vue';
 import ComposeConversation from 'dashboard/components-next/NewConversation/ComposeConversation.vue';
 import { BUS_EVENTS } from 'shared/constants/busEvents';
 import NextButton from 'dashboard/components-next/button/Button.vue';
+import ContactAPI from 'dashboard/api/contacts';
 
 import {
   isAConversationRoute,
@@ -51,6 +52,9 @@ export default {
       showEditModal: false,
       showMergeModal: false,
       showDeleteModal: false,
+      showScannerModal: false,
+      isLoadingScannerInfo: false,
+      scannerData: null,
     };
   },
   computed: {
@@ -170,6 +174,39 @@ export default {
     },
     openMergeModal() {
       this.showMergeModal = true;
+    },
+    closeScannerModal() {
+      this.showScannerModal = false;
+      this.scannerData = null;
+    },
+    async getScannerInfo() {
+      this.isLoadingScannerInfo = true;
+      try {
+        const response = await ContactAPI.getScannerInfo(this.contact.id);
+
+        // 결과를 콘솔에 출력
+        console.log('Scanner API Result:', response.data);
+
+        if (response.data.success) {
+          // 성공적으로 업데이트된 경우
+          this.scannerData = response.data.scanner_data;
+          this.showScannerModal = true;
+
+          // 페이지 새로고침으로 업데이트된 데이터 표시
+          // window.location.reload();
+        } else {
+          // 실패한 경우
+          useAlert(`Failed Update Contact: ${response.data.error}`);
+        }
+      } catch (error) {
+        console.error('Scanner API Error:', error);
+        useAlert(
+          error.response?.data?.error ||
+            'Scanner 정보 조회 중 오류가 발생했습니다.'
+        );
+      } finally {
+        this.isLoadingScannerInfo = false;
+      }
     },
   },
 };
@@ -313,9 +350,22 @@ export default {
           faded
           sm
           blue
-          :disabled="uiFlags.isDeleting"
-          @click="toggleDeleteModal"
+          :disabled="isLoadingScannerInfo"
+          :loading="isLoadingScannerInfo"
+          @click="getScannerInfo"
         />
+        <!-- Scanner Info Button -->
+        <!-- <NextButton
+          v-tooltip.top-end="'Scanner 정보 조회'"
+          icon="i-ph-database"
+          slate
+          faded
+          sm
+          green
+          :disabled="isLoadingScannerInfo"
+          :loading="isLoadingScannerInfo"
+          @click="getScannerInfo"
+        /> -->
       </div>
       <EditContact
         v-if="showEditModal"
@@ -329,6 +379,72 @@ export default {
         :show="showMergeModal"
         @close="closeMergeModal"
       />
+
+      <!-- Scanner Info Modal -->
+      <woot-modal
+        v-if="showScannerModal"
+        v-model:show="showScannerModal"
+        :on-close="closeScannerModal"
+      >
+        <div class="h-auto overflow-auto">
+          <div class="flex flex-col p-8">
+            <div class="flex items-center justify-between pb-4 border-b">
+              <h2 class="text-2xl font-medium">
+                {{ $t('CONTACT_PANEL.SCANNER_INFO') }}
+              </h2>
+            </div>
+
+            <div v-if="scannerData" class="mt-6">
+              <!-- Simple Charge Status -->
+              <div
+                class="flex items-center justify-center p-8 rounded-lg text-center"
+                :class="
+                  scannerData.is_charge
+                    ? 'bg-red-50 dark:bg-red-900/20'
+                    : 'bg-green-50 dark:bg-green-900/20'
+                "
+              >
+                <div>
+                  <h3
+                    class="text-2xl font-bold mb-2"
+                    :class="
+                      scannerData.is_charge
+                        ? 'text-red-800 dark:text-red-200'
+                        : 'text-green-800 dark:text-green-200'
+                    "
+                  >
+                    {{
+                      scannerData.is_charge
+                        ? $t('CONTACT_PANEL.CHARGED')
+                        : $t('CONTACT_PANEL.FREE')
+                    }}
+                  </h3>
+                  <p
+                    class="text-lg"
+                    :class="
+                      scannerData.is_charge
+                        ? 'text-red-600 dark:text-red-300'
+                        : 'text-green-600 dark:text-green-300'
+                    "
+                  >
+                    {{
+                      scannerData.is_charge
+                        ? $t('CONTACT_PANEL.CHARGED_MESSAGE')
+                        : $t('CONTACT_PANEL.FREE_MESSAGE')
+                    }}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex justify-end mt-6 pt-4 border-t">
+              <NextButton @click="closeScannerModal">
+                {{ $t('CONTACT_PANEL.CLOSE') }}
+              </NextButton>
+            </div>
+          </div>
+        </div>
+      </woot-modal>
     </div>
     <woot-delete-modal
       v-if="showDeleteModal"
