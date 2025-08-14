@@ -58,6 +58,7 @@ export default {
       messageSignature: '',
       name: '',
       preferredLanguage: 'ko',
+      autoTranslate: false,
       hotKeys: [
         {
           key: 'enter',
@@ -108,7 +109,9 @@ export default {
       this.displayName = this.currentUser.display_name;
       this.messageSignature = this.currentUser.message_signature;
       this.preferredLanguage = this.currentUser.preferred_language || 'ko';
+      this.autoTranslate = this.currentUser.auto_translate || false;
       console.log('Initialized preferredLanguage:', this.preferredLanguage);
+      console.log('Initialized autoTranslate:', this.autoTranslate);
     },
     async dispatchUpdate(payload, successMessage, errorMessage) {
       console.log('dispatchUpdate called with payload:', payload);
@@ -128,20 +131,27 @@ export default {
     },
     async updateProfile(userAttributes) {
       console.log('updateProfile called with:', userAttributes);
-      const { name, email, displayName, preferredLanguage } = userAttributes;
+      const { name, email, displayName, preferredLanguage, autoTranslate } =
+        userAttributes;
       console.log('Extracted preferredLanguage:', preferredLanguage);
+      console.log('Extracted autoTranslate:', autoTranslate);
       const hasEmailChanged = this.currentUser.email !== email;
       this.name = name || this.name;
       this.email = email || this.email;
       this.displayName = displayName || this.displayName;
       this.preferredLanguage = preferredLanguage || this.preferredLanguage;
+      if (autoTranslate !== undefined) {
+        this.autoTranslate = autoTranslate;
+      }
       console.log('Final this.preferredLanguage:', this.preferredLanguage);
+      console.log('Final this.autoTranslate:', this.autoTranslate);
 
       const updatePayload = {
         name: this.name,
         email: this.email,
         displayName: this.displayName,
         preferredLanguage: this.preferredLanguage,
+        autoTranslate: this.autoTranslate,
         avatar: this.avatarFile,
       };
       console.log('updatePayload:', updatePayload);
@@ -226,6 +236,7 @@ export default {
         :display-name="displayName"
         :email="email"
         :preferred-language="preferredLanguage"
+        :auto-translate="autoTranslate"
         :email-enabled="!globalConfig.disableUserProfileUpdate"
         @update-user="updateProfile"
       />

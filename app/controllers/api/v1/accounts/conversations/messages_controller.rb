@@ -93,6 +93,52 @@ class Api::V1::Accounts::Conversations::MessagesController < Api::V1::Accounts::
     render json: { error: 'Translation service unavailable' }, status: :internal_server_error
   end
 
+  def translate_text
+    Rails.logger.info 'MessagesController#translate_text: Starting text translation'
+    Rails.logger.debug do
+      "MessagesController#translate_text: Content: #{permitted_text_params[:content]}, Target language: #{permitted_text_params[:target_language]}, Provider: #{permitted_text_params[:provider] || 'google'}"
+    end
+
+    # translate_text는 사용자 입력을 번역하므로 source와 target이 반대
+    # source: 사용자의 언어 (Current.user.preferred_language)
+    # target: 상대방 언어 (inbox source_language)
+    user_language = Current.user&.preferred_language || 'auto'
+    target_language = @conversation.inbox.source_language || permitted_text_params[:target_language]
+
+    # 직접 번역 서비스 호출 (메시지 없이)
+    provider_class = case permitted_text_params[:provider] || 'google'
+                     when 'google'
+                       GoogleTranslateService
+                     when 'meta'
+                       MetaTranslateService
+                     when 'openai_gpt'
+                       OpenaiGptTranslateService
+                     else
+                       GoogleTranslateService
+                     end
+
+    begin
+      translation_result = provider_class.new(
+        permitted_text_params[:content],
+        target_language,
+        user_language
+      ).translate
+
+      Rails.logger.info 'MessagesController#translate_text: Translation successful'
+
+      render json: {
+        original_content: permitted_text_params[:content],
+        translated_content: translation_result,
+        source_language: user_language,
+        target_language: target_language,
+        provider: permitted_text_params[:provider] || 'google'
+      }
+    rescue StandardError => e
+      Rails.logger.error "MessagesController#translate_text: Translation failed - #{e.message}"
+      render json: { error: 'Translation failed', details: e.message }, status: :unprocessable_entity
+    end
+  end
+
   private
 
   def legacy_translate_method
@@ -121,6 +167,10 @@ class Api::V1::Accounts::Conversations::MessagesController < Api::V1::Accounts::
 
   def permitted_params
     params.permit(:id, :target_language, :provider, :status, :external_error)
+  end
+
+  def permitted_text_params
+    params.permit(:content, :target_language, :provider)
   end
 
   def already_translated_content_available?

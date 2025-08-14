@@ -409,6 +409,9 @@ class Message < ApplicationRecord
     return if content.blank?
     return if private? # 비공개 메시지는 번역하지 않음
 
+    # Account에서 auto_translate_enabled 설정이 활성화된 경우에만 번역 실행
+    return unless account.auto_translate_enabled == true
+
     # 백그라운드에서 번역 실행
     Messages::AutoTranslateJob.perform_later(id)
   end

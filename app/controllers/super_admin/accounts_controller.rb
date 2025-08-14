@@ -37,6 +37,12 @@ class SuperAdmin::AccountsController < SuperAdmin::ApplicationController
     permitted_params = super
     permitted_params[:limits] = permitted_params[:limits].to_h.compact
     permitted_params[:selected_feature_flags] = params[:enabled_features].keys.map(&:to_sym) if params[:enabled_features].present?
+
+    # Convert auto_translate_enabled to boolean if present
+    if permitted_params[:auto_translate_enabled].present?
+      permitted_params[:auto_translate_enabled] = ActiveModel::Type::Boolean.new.cast(permitted_params[:auto_translate_enabled])
+    end
+
     permitted_params
   end
 

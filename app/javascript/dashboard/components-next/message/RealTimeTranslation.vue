@@ -11,6 +11,7 @@ const props = defineProps({
 
 // props가 업데이트될 때마다 자동으로 반응하도록 computed 사용
 const translationsData = computed(() => ({
+  original: props.contentAttributes?.realtimeTranslations?.original || null,
   google: props.contentAttributes?.realtimeTranslations?.google || null,
   meta: props.contentAttributes?.realtimeTranslations?.meta || null,
 }));
@@ -20,6 +21,8 @@ const isLoading = ref(false);
 // 번역 결과가 있는지 확인
 const hasTranslations = computed(() => {
   return (
+    (translationsData.value.original &&
+      translationsData.value.original.content) ||
     (translationsData.value.google && translationsData.value.google.content) ||
     (translationsData.value.meta && translationsData.value.meta.content)
   );
@@ -78,6 +81,20 @@ const clickTest = () => {
           <div v-if="isLoading" class="translation-loading">
             <Spinner size="small" />
             <span>{{ $t('CONVERSATION.TRANSLATING') }}</span>
+          </div>
+
+          <div
+            v-if="
+              translationsData.original && translationsData.original.content
+            "
+            class="translation-result"
+          >
+            <div class="provider-tag original-tag">
+              {{ $t('CONVERSATION.TRANSLATION_PROVIDERS.ORIGINAL') }}
+            </div>
+            <div class="translation-content original-content">
+              {{ translationsData.original.content }}
+            </div>
           </div>
 
           <div
@@ -167,6 +184,10 @@ const clickTest = () => {
   letter-spacing: 0.5px;
 }
 
+.provider-tag.original-tag {
+  background: #6b7280;
+}
+
 .translation-content {
   font-size: 14px;
   color: #1e293b;
@@ -177,6 +198,10 @@ const clickTest = () => {
   border-left: 4px solid #3b82f6;
   line-height: 1.5;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.translation-content.original-content {
+  border-left-color: #6b7280;
 }
 
 /* Dark theme support */
@@ -196,6 +221,21 @@ const clickTest = () => {
 .dark .provider-tag {
   background: #1d4ed8;
   color: #ffffff;
+}
+
+.dark .provider-tag.original-tag {
+  background: #4b5563;
+}
+
+.dark .translation-content {
+  background: #0f172a;
+  color: #e2e8f0;
+  border-color: #334155;
+  border-left-color: #60a5fa;
+}
+
+.dark .translation-content.original-content {
+  border-left-color: #6b7280;
 }
 
 .dark .translation-loading {

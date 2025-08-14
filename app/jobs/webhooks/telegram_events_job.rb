@@ -4,7 +4,7 @@ class Webhooks::TelegramEventsJob < ApplicationJob
   def perform(params = {})
     Rails.logger.info "TelegramEventsJob: Received params keys: #{params.keys}"
     Rails.logger.info "TelegramEventsJob: bot_token from params: '#{params[:bot_token]}'"
-    
+
     return unless params[:bot_token]
 
     channel = Channel::Telegram.find_by(bot_token: params[:bot_token])

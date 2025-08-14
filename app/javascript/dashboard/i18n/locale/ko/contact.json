@@ -57,6 +57,11 @@
     "TITLE": "연락처 수정",
     "DESC": "연락처 수정 자세히"
   },
+  "REFRESH_CONTACT": {
+    "BUTTON_LABEL": "연락처 새로 고침",
+    "TITLE": "연락처 새로 고침",
+    "DESC": "연락처 새로 고침 자세히"
+  },
   "DELETE_CONTACT": {
     "BUTTON_LABEL": "연락처 지우기",
     "TITLE": "연락처 지우기",

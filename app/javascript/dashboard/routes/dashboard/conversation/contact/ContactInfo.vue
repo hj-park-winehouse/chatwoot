@@ -293,6 +293,7 @@ export default {
           :disabled="uiFlags.isMerging"
           @click="openMergeModal"
         />
+
         <NextButton
           v-if="isAdmin"
           v-tooltip.top-end="$t('DELETE_CONTACT.BUTTON_LABEL')"
@@ -301,6 +302,17 @@ export default {
           faded
           sm
           ruby
+          :disabled="uiFlags.isDeleting"
+          @click="toggleDeleteModal"
+        />
+        <!-- TODO: Erel Api -> Update Contact 어디에다가 요청하는게 맞는지 아직 잘 모르겠슴....-->
+        <NextButton
+          v-tooltip.top-end="$t('REFRESH_CONTACT.BUTTON_LABEL')"
+          icon="i-ph-arrows-clockwise"
+          slate
+          faded
+          sm
+          blue
           :disabled="uiFlags.isDeleting"
           @click="toggleDeleteModal"
         />

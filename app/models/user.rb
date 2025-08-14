@@ -165,6 +165,14 @@ class User < ApplicationRecord
     self.ui_settings = (ui_settings || {}).merge('preferred_language' => language)
   end
 
+  def auto_translate
+    ui_settings&.dig('auto_translate') || false
+  end
+
+  def auto_translate=(enabled)
+    self.ui_settings = (ui_settings || {}).merge('auto_translate' => enabled)
+  end
+
   private
 
   def remove_macros

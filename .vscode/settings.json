@@ -1,4 +1,29 @@
 {
-  "cSpell.words": ["chatwoot", "dompurify"],
-  "editor.formatOnSave": false
+  "cSpell.words": [
+    "AUDIORECORDER",
+    "chatwoot",
+    "clickaway",
+    "dompurify",
+    "Dyte",
+    "helpcenter",
+    "MESSSAGE",
+    "popout",
+    "REMANING",
+    "REPLYBOX",
+    "SUCCESFUL",
+    "vueuse",
+    "vuex",
+    "Woot"
+  ],
+  "editor.formatOnSave": false,
+  "editor.defaultFormatter": "dbaeumer.vscode-eslint",
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact",
+    "vue"
+  ]
 }
+

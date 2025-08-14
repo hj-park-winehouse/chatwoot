@@ -1,6 +1,7 @@
 export const REPLY_EDITOR_MODES = {
   REPLY: 'REPLY',
   NOTE: 'NOTE',
+  TRANSLATE: 'TRANSLATE',
 };
 
 export const CHAR_LENGTH_WARNING = {

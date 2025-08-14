@@ -24,6 +24,10 @@ export default {
       type: String,
       default: 'ko',
     },
+    autoTranslate: {
+      type: Boolean,
+      default: false,
+    },
     emailEnabled: {
       type: Boolean,
       default: false,
@@ -39,6 +43,7 @@ export default {
       userDisplayName: this.displayName,
       userEmail: this.email,
       userPreferredLanguage: this.preferredLanguage,
+      userAutoTranslate: this.autoTranslate,
       languageOptions: [
         { key: 'ko', label: '한국어' },
         { key: 'en', label: 'English' },
@@ -91,9 +96,21 @@ export default {
     },
     preferredLanguage: {
       handler(value) {
-        console.log('UserBasicDetails: preferredLanguage prop changed to:', value);
+        console.log(
+          'UserBasicDetails: preferredLanguage prop changed to:',
+          value
+        );
         this.userPreferredLanguage = value;
-        console.log('UserBasicDetails: userPreferredLanguage set to:', this.userPreferredLanguage);
+        console.log(
+          'UserBasicDetails: userPreferredLanguage set to:',
+          this.userPreferredLanguage
+        );
+      },
+      immediate: true,
+    },
+    autoTranslate: {
+      handler(value) {
+        this.userAutoTranslate = value;
       },
       immediate: true,
     },
@@ -110,6 +127,7 @@ export default {
         displayName: this.userDisplayName,
         email: this.userEmail,
         preferredLanguage: this.userPreferredLanguage,
+        autoTranslate: this.userAutoTranslate,
       });
     },
   },
@@ -176,6 +194,21 @@ export default {
       </select>
       <p class="text-xs text-gray-500 mt-1">
         {{ $t('PROFILE_SETTINGS.FORM.PREFERRED_LANGUAGE.HELP_TEXT') }}
+      </p>
+    </div>
+    <div class="pb-4">
+      <label class="flex items-center">
+        <input
+          v-model="userAutoTranslate"
+          type="checkbox"
+          class="form-checkbox h-4 w-4 text-blue-600 border border-gray-300 rounded focus:ring-blue-500"
+        />
+        <span class="ml-2 text-sm font-medium text-gray-700">
+          {{ $t('PROFILE_SETTINGS.FORM.AUTO_TRANSLATE.LABEL') }}
+        </span>
+      </label>
+      <p class="text-xs text-gray-500 mt-1">
+        {{ $t('PROFILE_SETTINGS.FORM.AUTO_TRANSLATE.HELP_TEXT') }}
       </p>
     </div>
     <div>

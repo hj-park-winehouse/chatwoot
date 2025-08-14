@@ -16,6 +16,7 @@ json.custom_attributes resource.custom_attributes if resource.custom_attributes.
 json.role resource.active_account_user&.role
 json.ui_settings resource.ui_settings
 json.preferred_language resource.preferred_language
+json.auto_translate resource.auto_translate
 json.uid resource.uid
 json.type resource.type
 json.accounts do

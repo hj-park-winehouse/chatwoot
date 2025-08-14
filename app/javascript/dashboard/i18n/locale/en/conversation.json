@@ -18,7 +18,8 @@
     "TRANSLATING": "Translating...",
     "TRANSLATION_PROVIDERS": {
       "GOOGLE": "Google:",
-      "META": "Meta:"
+      "META": "Meta:",
+      "ORIGINAL": "Original:"
     },
     "TRANSLATION_UI": {
       "ORIGINAL_MESSAGE": "Original Message",
@@ -186,8 +187,16 @@
     "REPLYBOX": {
       "REPLY": "Reply",
       "PRIVATE_NOTE": "Private Note",
+      "TRANSLATE": "Translate",
       "SEND": "Send",
       "CREATE": "Add Note",
+      "TRANSLATE_BUTTON": "Translate",
+      "TRANSLATE_AND_SEND": "Translate & Send",
+      "MESSAGE_REQUIRED": "Please enter a message",
+      "TRANSLATION_SUCCESS": "Translation completed successfully",
+      "TRANSLATION_FAILED": "Translation failed",
+      "ORIGINAL_MESSAGE": "Original message",
+      "TRANSLATED_MESSAGE": "Translated message",
       "INSERT_READ_MORE": "Read more",
       "DISMISS_REPLY": "Dismiss reply",
       "REPLYING_TO": "Replying to:",

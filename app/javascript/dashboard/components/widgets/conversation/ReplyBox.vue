@@ -5,6 +5,7 @@ import { useAlert } from 'dashboard/composables';
 import { useUISettings } from 'dashboard/composables/useUISettings';
 import { useTrack } from 'dashboard/composables';
 import keyboardEventListenerMixins from 'shared/mixins/keyboardEventListenerMixins';
+import MessageApi from 'dashboard/api/inbox/message';
 
 import CannedResponse from './CannedResponse.vue';
 import ReplyToMessage from './ReplyToMessage.vue';
@@ -119,6 +120,10 @@ export default {
       showArticleSearchPopover: false,
       hasRecordedAudio: false,
       isComposing: false, // IME 입력 상태 추가
+      originalMessage: '', // 원본 메시지 (번역 전)
+      translatedMessage: '', // 번역된 메시지
+      isTranslating: false, // 번역 중 상태
+      isTranslated: false, // 번역 완료 상태
     };
   },
   computed: {
@@ -194,6 +199,9 @@ export default {
         return this.isOnPrivateNote;
       }
       return true;
+    },
+    isOnTranslateMode() {
+      return this.replyType === REPLY_EDITOR_MODES.TRANSLATE;
     },
     inboxId() {
       return this.currentChat.inbox_id;
@@ -277,9 +285,17 @@ export default {
       );
     },
     replyButtonLabel() {
-      let sendMessageText = this.$t('CONVERSATION.REPLYBOX.SEND');
-      if (this.isPrivate) {
+      let sendMessageText;
+      if (this.isOnTranslateMode) {
+        if (this.isTranslated) {
+          sendMessageText = this.$t('CONVERSATION.REPLYBOX.TRANSLATE_AND_SEND');
+        } else {
+          sendMessageText = this.$t('CONVERSATION.REPLYBOX.TRANSLATE_BUTTON');
+        }
+      } else if (this.isPrivate) {
         sendMessageText = this.$t('CONVERSATION.REPLYBOX.CREATE');
+      } else {
+        sendMessageText = this.$t('CONVERSATION.REPLYBOX.SEND');
       }
       const keyLabel = this.isEditorHotKeyEnabled('cmd_enter')
         ? '(⌘ + ↵)'
@@ -431,17 +447,21 @@ export default {
       }
     },
     message(updatedMessage) {
+      // 번역 모드에서 메시지가 비어졌을 때 번역 상태 초기화
+      if (
+        this.isOnTranslateMode &&
+        !updatedMessage.trim() &&
+        this.isTranslated
+      ) {
+        this.resetTranslationState();
+      }
+
       // Check if the message starts with a slash.
       const bodyWithoutSignature = removeSignature(
         updatedMessage,
-        this.signatureToApply
+        this.messageSignature
       );
-      const startsWithSlash = bodyWithoutSignature.startsWith('/');
-
-      // Determine if the user is potentially typing a slash command.
-      // This is true if the message starts with a slash and the rich content editor is not active.
-      this.hasSlashCommand = startsWithSlash && !this.showRichContentEditor;
-      this.showMentions = this.hasSlashCommand;
+      this.hasSlashCommand = bodyWithoutSignature.startsWith('/');
 
       // If a slash command is active, extract the command text after the slash.
       // If not, reset the mentionSearchKey.
@@ -453,6 +473,20 @@ export default {
       this.doAutoSaveDraft();
     },
     replyType(updatedReplyType, oldReplyType) {
+      // 번역 모드 관련 상태 리셋
+      if (
+        oldReplyType === REPLY_EDITOR_MODES.TRANSLATE &&
+        updatedReplyType !== REPLY_EDITOR_MODES.TRANSLATE
+      ) {
+        this.resetTranslationState();
+      }
+      if (
+        updatedReplyType === REPLY_EDITOR_MODES.TRANSLATE &&
+        oldReplyType !== REPLY_EDITOR_MODES.TRANSLATE
+      ) {
+        this.resetTranslationState();
+      }
+
       this.setToDraft(this.conversationIdByRoute, oldReplyType);
       this.getFromDraft();
     },
@@ -498,6 +532,67 @@ export default {
     );
   },
   methods: {
+    async translateMessage() {
+      console.log('translateMessage called', {
+        message: this.message,
+        isOnTranslateMode: this.isOnTranslateMode,
+        replyType: this.replyType,
+        isComposing: this.isComposing,
+        originalMessage: this.originalMessage,
+      });
+
+      // IME 입력 중에는 번역하지 않음
+      if (this.isComposing) {
+        console.log('IME 입력 중이므로 번역을 건너뜀');
+        return;
+      }
+
+      // 현재 메시지를 확인하여 비어있으면 번역하지 않음
+      const currentMessage = this.message.trim();
+      if (!currentMessage) {
+        useAlert(this.$t('CONVERSATION.REPLYBOX.MESSAGE_REQUIRED'));
+        return;
+      }
+
+      this.isTranslating = true;
+      try {
+        // 번역을 실행할 때 현재 메시지를 원본으로 저장 (아직 저장되지 않았거나 이미 번역된 상태가 아닌 경우)
+        if (!this.isTranslated) {
+          this.originalMessage = currentMessage;
+        }
+
+        // 항상 원본 메시지를 번역
+        const messageToTranslate = this.originalMessage;
+
+        console.log('Translating message:', messageToTranslate);
+
+        const response = await MessageApi.translateText(
+          this.currentChat.id,
+          messageToTranslate,
+          this.currentUser.preferred_language || 'ko',
+          'google'
+        );
+
+        if (response.data && response.data.translated_content) {
+          this.translatedMessage = response.data.translated_content;
+          this.isTranslated = true;
+          this.message = this.translatedMessage;
+          useAlert(this.$t('CONVERSATION.REPLYBOX.TRANSLATION_SUCCESS'));
+        }
+      } catch (error) {
+        useAlert(this.$t('CONVERSATION.REPLYBOX.TRANSLATION_FAILED'));
+        console.error('Translation failed:', error);
+      } finally {
+        this.isTranslating = false;
+      }
+    },
+    resetTranslationState() {
+      console.log('Resetting translation state');
+      this.originalMessage = '';
+      this.translatedMessage = '';
+      this.isTranslated = false;
+      this.isTranslating = false;
+    },
     handleInsert(article) {
       const { url, title } = article;
       if (this.isRichEditorEnabled) {
@@ -697,6 +792,9 @@ export default {
         return;
       }
       if (!this.showMentions) {
+        // 현재 탭 모드 저장
+        const currentReplyType = this.replyType;
+
         const isOnWhatsApp =
           this.isATwilioWhatsAppChannel ||
           this.isAWhatsAppCloudChannel ||
@@ -722,6 +820,12 @@ export default {
         this.clearMessage();
         this.hideEmojiPicker();
         this.$emit('update:popOutReplyBox', false);
+
+        // 번역 모드였다면 번역 상태만 초기화하고 탭은 유지
+        if (currentReplyType === REPLY_EDITOR_MODES.TRANSLATE) {
+          this.resetTranslationState();
+          this.replyType = REPLY_EDITOR_MODES.TRANSLATE;
+        }
       }
     },
     sendMessageAsMultipleMessages(message) {
@@ -741,6 +845,17 @@ export default {
           });
     },
     async onSendReply() {
+      // 번역 모드 처리
+      if (this.isOnTranslateMode) {
+        if (!this.isTranslated) {
+          // 첫 번째 클릭: 번역 실행
+          await this.translateMessage();
+          return;
+        }
+        // 두 번째 클릭: 번역된 메시지 발송
+        // 번역 탭을 유지하면서 메시지만 발송
+      }
+
       const undefinedVariables = getUndefinedVariablesInMessage({
         message: this.message,
         variables: this.messageVariables,
@@ -1036,6 +1151,22 @@ export default {
       };
       messagePayload = this.setReplyToInPayload(messagePayload);
 
+      // 번역 모드에서 번역된 메시지를 보낼 때 contentAttributes에 번역 정보 포함
+      if (this.isOnTranslateMode && this.isTranslated && this.originalMessage) {
+        messagePayload.contentAttributes = {
+          realtimeTranslations: {
+            original: {
+              content: this.originalMessage,
+              provider: 'original',
+            },
+            // google: {
+            //   content: this.translatedMessage,
+            //   provider: 'google',
+            // },
+          },
+        };
+      }
+
       if (this.attachedFiles && this.attachedFiles.length) {
         messagePayload.files = [];
         this.attachedFiles.forEach(attachment => {
@@ -1213,7 +1344,7 @@ export default {
       />
       <!-- Private Note -->
       <WootMessageEditor
-        v-else
+        v-else-if="showRichContentEditor"
         v-model="message"
         :editor-id="editorStateId"
         class="input"
@@ -1238,6 +1369,7 @@ export default {
         @compositionend="onCompositionEnd"
       />
     </div>
+
     <div
       v-if="hasAttachments && !showAudioRecorderEditor"
       class="attachment-preview-box"

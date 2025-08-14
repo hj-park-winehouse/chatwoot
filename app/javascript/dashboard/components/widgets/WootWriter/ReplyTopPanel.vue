@@ -89,7 +89,7 @@ export default {
     <EditorModeToggle
       :mode="mode"
       class="mt-3"
-      @toggle-mode="handleModeToggle"
+      @set-reply-mode="$emit('setReplyMode', $event)"
     />
     <div class="flex items-center mx-4 my-0">
       <div v-if="isMessageLengthReachingThreshold" class="text-xs">

@@ -18,7 +18,8 @@
     "TRANSLATING": "번역중...",
     "TRANSLATION_PROVIDERS": {
       "GOOGLE": "Google:",
-      "META": "Meta:"
+      "META": "Meta:",
+      "ORIGINAL": "원본:"
     },
     "TRANSLATION_UI": {
       "ORIGINAL_MESSAGE": "원본 메시지",
@@ -186,8 +187,16 @@
     "REPLYBOX": {
       "REPLY": "답글",
       "PRIVATE_NOTE": "개인 노트",
+      "TRANSLATE": "번역",
       "SEND": "보내기",
       "CREATE": "노트 추가",
+      "TRANSLATE_BUTTON": "번역하기",
+      "TRANSLATE_AND_SEND": "번역 후 발송",
+      "MESSAGE_REQUIRED": "메시지를 입력해주세요",
+      "TRANSLATION_SUCCESS": "번역이 완료되었습니다",
+      "TRANSLATION_FAILED": "번역에 실패했습니다",
+      "ORIGINAL_MESSAGE": "원본 메시지",
+      "TRANSLATED_MESSAGE": "번역된 메시지",
       "INSERT_READ_MORE": "Read more",
       "DISMISS_REPLY": "Dismiss reply",
       "REPLYING_TO": "Replying to:",

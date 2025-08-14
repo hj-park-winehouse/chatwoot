@@ -57,6 +57,11 @@
     "TITLE": "Edit contact",
     "DESC": "Edit contact details"
   },
+  "REFRESH_CONTACT": {
+    "BUTTON_LABEL": "Refresh Contact",
+    "TITLE": "Refresh contact",
+    "DESC": "Refresh contact details"
+  },
   "DELETE_CONTACT": {
     "BUTTON_LABEL": "Delete Contact",
     "TITLE": "Delete contact",

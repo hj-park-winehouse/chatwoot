@@ -107,6 +107,7 @@ const getInReplyToMessage = parentMessage => {
       />
       <Message
         v-bind="message"
+        @click="() => console.log('Message clicked:', message)"
         :is-email-inbox="isAnEmailChannel"
         :in-reply-to="getInReplyToMessage(message)"
         :group-with-next="shouldGroupWithNext(index, allMessages)"

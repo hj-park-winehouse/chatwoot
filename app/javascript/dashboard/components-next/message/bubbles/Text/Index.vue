@@ -8,6 +8,7 @@ import RealTimeTranslation from 'dashboard/components-next/message/RealTimeTrans
 import { MESSAGE_TYPES } from '../../constants';
 import { useMessageContext } from '../../provider.js';
 import { useTranslations } from 'dashboard/composables/useTranslations';
+import { useMapGetter } from 'dashboard/composables/store.js';
 
 const {
   content,
@@ -20,6 +21,9 @@ const {
 
 const { hasTranslations, translationContent } =
   useTranslations(contentAttributes);
+
+// 사용자의 auto_translate 설정 확인
+const currentUser = useMapGetter('getCurrentUser');
 
 const renderOriginal = ref(false);
 
@@ -56,6 +60,18 @@ const isEmpty = computed(() => {
   return !content.value && !attachments.value?.length;
 });
 
+const showRealTimeTranslation = computed(() => {
+  // 사용자의 auto_translate 설정이 true인 경우에만 실시간 번역 표시
+  const autoTranslate = currentUser.value?.ui_settings?.auto_translate;
+  console.log('Text/Index showRealTimeTranslation:', {
+    autoTranslate,
+    userSettings: currentUser.value?.ui_settings,
+    content: content.value,
+    isEmpty: isEmpty.value,
+  });
+  return autoTranslate === true || autoTranslate === 'true';
+});
+
 const handleSeeOriginal = () => {
   renderOriginal.value = !renderOriginal.value;
 };
@@ -76,7 +92,7 @@ const handleSeeOriginal = () => {
       />
       <!-- 실시간 번역 컴포넌트 -->
       <RealTimeTranslation
-        v-if="content && !isEmpty"
+        v-if="content && !isEmpty && showRealTimeTranslation"
         :message-id="id"
         :content="content"
         :conversation-id="conversationId"

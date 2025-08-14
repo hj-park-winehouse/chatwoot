@@ -39,31 +39,46 @@ export default {
     return false;
   },
   profileUpdate({ displayName, avatar, ...profileAttributes }) {
-    console.log('profileUpdate called with:', { displayName, avatar, profileAttributes });
+    console.log('profileUpdate called with:', {
+      displayName,
+      avatar,
+      profileAttributes,
+    });
     const formData = new FormData();
     Object.keys(profileAttributes).forEach(key => {
       const hasValue = profileAttributes[key] !== undefined;
-      console.log(`Processing key: ${key}, value: ${profileAttributes[key]}, hasValue: ${hasValue}`);
+      console.log(
+        `Processing key: ${key}, value: ${profileAttributes[key]}, hasValue: ${hasValue}`
+      );
       if (hasValue) {
         // Convert camelCase to snake_case for Rails compatibility
-        const railsKey = key === 'preferredLanguage' ? 'preferred_language' : key;
+        let railsKey = key;
+        if (key === 'preferredLanguage') {
+          railsKey = 'preferred_language';
+        } else if (key === 'autoTranslate') {
+          railsKey = 'auto_translate';
+        }
         formData.append(`profile[${railsKey}]`, profileAttributes[key]);
-        console.log(`Added to formData: profile[${railsKey}] = ${profileAttributes[key]}`);
+        console.log(
+          `Added to formData: profile[${railsKey}] = ${profileAttributes[key]}`
+        );
       }
     });
     formData.append('profile[display_name]', displayName || '');
-    console.log(`Added to formData: profile[display_name] = ${displayName || ''}`);
+    console.log(
+      `Added to formData: profile[display_name] = ${displayName || ''}`
+    );
     if (avatar) {
       formData.append('profile[avatar]', avatar);
       console.log('Added avatar to formData');
     }
-    
+
     // FormData 내용을 확인하기 위한 로그
     console.log('Final FormData entries:');
-    for (let pair of formData.entries()) {
+    Array.from(formData.entries()).forEach(pair => {
       console.log(`${pair[0]}: ${pair[1]}`);
-    }
-    
+    });
+
     return axios.put(endPoints('profileUpdate').url, formData);
   },
 

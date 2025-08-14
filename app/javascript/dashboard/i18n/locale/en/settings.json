@@ -202,6 +202,10 @@
         "LABEL": "Preferred Translation Language",
         "HELP_TEXT": "Select your preferred language for automatic message translation."
       },
+      "AUTO_TRANSLATE": {
+        "LABEL": "Enable Auto Translation",
+        "HELP_TEXT": "Automatically translate new messages to your preferred language."
+      },
       "CURRENT_PASSWORD": {
         "LABEL": "Current password",
         "ERROR": "Please enter the current password",

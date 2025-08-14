@@ -114,6 +114,14 @@ class MessageApi extends ApiClient {
       }
     );
   }
+
+  translateText(conversationId, content, targetLanguage, provider = 'google') {
+    return axios.post(`${this.url}/${conversationId}/messages/translate_text`, {
+      content,
+      target_language: targetLanguage,
+      provider,
+    });
+  }
 }
 
 export default new MessageApi();

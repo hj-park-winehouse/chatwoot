@@ -6,6 +6,8 @@ class Api::V1::ProfilesController < Api::BaseController
   def update
     Rails.logger.info "ProfilesController#update: profile_params = #{profile_params}"
     Rails.logger.info "ProfilesController#update: preferred_language param = #{profile_params[:preferred_language]}"
+    Rails.logger.info "ProfilesController#update: auto_translate param = #{profile_params[:auto_translate]}"
+    Rails.logger.info "ProfilesController#update: Raw params = #{params[:profile]}"
 
     if password_params[:password].present?
       render_could_not_create_error('Invalid current password') and return unless @user.valid_password?(password_params[:current_password])
@@ -13,7 +15,7 @@ class Api::V1::ProfilesController < Api::BaseController
       @user.update!(password_params.except(:current_password))
     end
 
-    @user.assign_attributes(profile_params.except(:preferred_language))
+    @user.assign_attributes(profile_params.except(:preferred_language, :auto_translate))
 
     # Handle preferred_language separately
     if profile_params[:preferred_language].present?
@@ -22,10 +24,18 @@ class Api::V1::ProfilesController < Api::BaseController
       Rails.logger.info "ProfilesController#update: After setting, preferred_language = #{@user.preferred_language}"
     end
 
+    # Handle auto_translate separately (supporting both camelCase and snake_case)
+    auto_translate_value = profile_params[:auto_translate] || profile_params[:autoTranslate]
+    if auto_translate_value.present?
+      Rails.logger.info "ProfilesController#update: Setting auto_translate to #{auto_translate_value}"
+      @user.auto_translate = auto_translate_value
+      Rails.logger.info "ProfilesController#update: After setting, auto_translate = #{@user.auto_translate}"
+    end
+
     @user.custom_attributes.merge!(custom_attributes_params)
     Rails.logger.info 'ProfilesController#update: About to save user'
     @user.save!
-    Rails.logger.info "ProfilesController#update: User saved successfully, preferred_language = #{@user.preferred_language}"
+    Rails.logger.info "ProfilesController#update: User saved successfully, preferred_language = #{@user.preferred_language}, auto_translate = #{@user.auto_translate}"
   end
 
   def avatar
@@ -79,6 +89,8 @@ class Api::V1::ProfilesController < Api::BaseController
       :message_signature,
       :account_id,
       :preferred_language,
+      :auto_translate,
+      :autoTranslate,
       ui_settings: {}
     )
   end
