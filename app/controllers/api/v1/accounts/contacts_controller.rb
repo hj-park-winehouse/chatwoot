@@ -144,12 +144,15 @@ class Api::V1::Accounts::ContactsController < Api::V1::Accounts::BaseController
       
       # custom_attributes에 scanner 정보 추가 (기존 값들을 덮어쓰지 않고 scanner 관련 데이터만 업데이트)
       updated_attributes = @contact.custom_attributes.merge({
-        'account_no' => scanner_data[:account_no],
-        'valid_date' => scanner_data[:valid_date],
-        'last_updated' => scanner_data[:last_updated],
-        'bill' => scanner_data[:bill],
-        'bank' => scanner_data[:bank],
-        'is_charge' => scanner_data[:is_charge],
+
+        account_no: scanner_data[:account_no],
+        bank: scanner_data[:bank],
+        bill: scanner_data[:bill],
+        mobile: scanner_data[:mobile],
+        entry_date: scanner_data[:entry_date],
+        reg_date: scanner_data[:reg_date],
+        passport_name: scanner_data[:passport_name],
+        valid_date: scanner_data[:valid_date],
       })
       
       Rails.logger.info "Updated attributes: #{updated_attributes.inspect}"

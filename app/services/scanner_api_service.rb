@@ -87,11 +87,13 @@ class ScannerApiService
       if subscriber
         parsed_data = {
           account_no: subscriber['account_no'],
-          valid_date: subscriber['validDate'],
-          # last_updated: subscriber['last_updated'],
-          bill: subscriber['bill'],
           bank: subscriber['bank'],
-          is_charge: data['is_charge']
+          bill: subscriber['bill'],
+          mobile: subscriber['mobile'],
+          entry_date: subscriber['entry_date'],
+          reg_date: subscriber['reg_date'],
+          passport_name: subscriber['passport_name'],
+          valid_date: subscriber['valid_date'],
         }
         
         Rails.logger.info "Parsed data: #{parsed_data.inspect}"
