@@ -43,6 +43,8 @@ const {
 
 const dragging = ref(false);
 const conversationSidebarItems = ref([]);
+const contactUpdated = ref(false);
+const updatedFields = ref([]);
 
 const currentAccountId = useMapGetter('getCurrentAccountId');
 
@@ -121,6 +123,17 @@ const closeContactPanel = () => {
   });
 };
 
+const handleContactUpdated = updateData => {
+  contactUpdated.value = true;
+  if (updateData && updateData.updatedFields) {
+    updatedFields.value = updateData.updatedFields;
+  }
+  setTimeout(() => {
+    contactUpdated.value = false;
+    updatedFields.value = [];
+  }, 2000);
+};
+
 onMounted(() => {
   conversationSidebarItems.value = conversationSidebarItemsOrder.value;
   getContactDetails();
@@ -136,7 +149,11 @@ onMounted(() => {
       :title="$t('CONVERSATION.SIDEBAR.CONTACT')"
       @close="closeContactPanel"
     />
-    <ContactInfo :contact="contact" :channel-type="channelType" />
+    <ContactInfo
+      :contact="contact"
+      :channel-type="channelType"
+      @contact-updated="handleContactUpdated"
+    />
     <div class="pb-8 list-group px-2">
       <Draggable
         :list="conversationSidebarItems"
@@ -199,6 +216,7 @@ onMounted(() => {
               />
             </AccordionItem>
           </div>
+          <!-- 기존값과 새로운 값이 변경되면 CSS로 강조표시(깜빡깜빡). -->
           <div v-else-if="element.name === 'contact_attributes'">
             <AccordionItem
               :title="$t('CONVERSATION_SIDEBAR.ACCORDION.CONTACT_ATTRIBUTES')"
@@ -213,6 +231,8 @@ onMounted(() => {
                 attribute-type="contact_attribute"
                 attribute-from="conversation_contact_panel"
                 :contact-id="contact.id"
+                :contact-updated="contactUpdated"
+                :updated-fields="updatedFields"
                 :empty-state-message="
                   $t('CONVERSATION_CUSTOM_ATTRIBUTES.NO_RECORDS_FOUND')
                 "

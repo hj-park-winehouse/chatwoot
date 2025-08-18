@@ -52,6 +52,7 @@
       "NO_RECORDS_FOUND": "No attributes found"
     },
     "SCANNER_INFO": "스캐너 정보",
+    "LOADING_SCANNER_INFO": "스캐너 정보를 불러오는 중...",
     "CHARGED": "충전 완료",
     "FREE": "미충전",
     "CHARGED_MESSAGE": "이 고객은 충전을 완료했습니다.",

@@ -52,6 +52,7 @@
       "NO_RECORDS_FOUND": "No attributes found"
     },
     "SCANNER_INFO": "Subscribers Information",
+    "LOADING_SCANNER_INFO": "Loading scanner information...",
     "CHARGED": "Top-up Completed",
     "FREE": "Not Recharged",
     "CHARGED_MESSAGE": "This customer has completed the top-up.",

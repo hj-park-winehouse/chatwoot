@@ -25,6 +25,14 @@ const props = defineProps({
     type: String,
     default: '',
   },
+  contactUpdated: {
+    type: Boolean,
+    default: false,
+  },
+  updatedFields: {
+    type: Array,
+    default: () => [],
+  },
   // Combine static elements with custom attributes components
   // To allow for custom ordering
   staticElements: {
@@ -295,6 +303,11 @@ const evenClass = [
               :label="element.attribute_display_name"
               :description="element.attribute_description"
               :value="element.value"
+              :class="{
+                'blink-element':
+                  contactUpdated &&
+                  updatedFields.includes(element.attribute_key),
+              }"
               show-actions
               :attribute-regex="element.regex_pattern"
               :regex-cue="element.regex_cue"
@@ -332,5 +345,25 @@ const evenClass = [
 <style lang="scss" scoped>
 .ghost {
   @apply opacity-50 bg-n-slate-3 dark:bg-n-slate-9;
+}
+
+@keyframes blink {
+  0% {
+    opacity: 0.5;
+    background-color: transparent; /* 시작 시 투명 */
+  }
+  50% {
+    opacity: 0.8;
+    background-color: yellow; /* 중간에 노란색으로 변경 */
+  }
+  100% {
+    opacity: 0.5;
+    background-color: transparent; /* 끝날 때 다시 투명 */
+  }
+}
+
+.blink-element {
+  animation: blink 0.5s; /* 애니메이션 이름과 지속 시간 */
+  animation-iteration-count: 10; /* 반복 횟수 */
 }
 </style>

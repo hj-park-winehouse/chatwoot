@@ -40,7 +40,7 @@ export default {
       default: true,
     },
   },
-  emits: ['panelClose'],
+  emits: ['panelClose', 'contactUpdated'],
   setup() {
     const { isAdmin } = useAdmin();
     return {
@@ -52,9 +52,8 @@ export default {
       showEditModal: false,
       showMergeModal: false,
       showDeleteModal: false,
-      showScannerModal: false,
       isLoadingScannerInfo: false,
-      scannerData: null,
+      contactUpdated: false,
     };
   },
   computed: {
@@ -175,12 +174,13 @@ export default {
     openMergeModal() {
       this.showMergeModal = true;
     },
-    closeScannerModal() {
-      this.showScannerModal = false;
-      this.scannerData = null;
-    },
     async getScannerInfo() {
       this.isLoadingScannerInfo = true;
+
+      // API 호출 전에 기존 custom_attributes 저장
+      const beforeAttributes = { ...this.contact.custom_attributes } || {};
+      console.log('Before API call - custom_attributes:', beforeAttributes);
+
       try {
         const response = await ContactAPI.getScannerInfo(this.contact.id);
 
@@ -188,12 +188,54 @@ export default {
         console.log('Scanner API Result:', response.data);
 
         if (response.data.success) {
-          // 성공적으로 업데이트된 경우
-          this.scannerData = response.data.scanner_data;
-          this.showScannerModal = true;
+          // 업데이트된 필드들을 동적으로 감지
+          const updatedFields = [];
+          if (response.data.scanner_data) {
+            // API 호출 전 저장한 값과 scanner_data 비교
+            console.log('scanner_data', response.data.scanner_data);
 
-          // 페이지 새로고침으로 업데이트된 데이터 표시
-          // window.location.reload();
+            const scannerData = response.data.scanner_data || {};
+
+            // scanner_data의 각 필드가 기존 custom_attributes와 다른지 확인
+            Object.keys(scannerData).forEach(key => {
+              const oldValue = beforeAttributes[key];
+              const newValue = scannerData[key];
+
+              console.log(
+                `Comparing ${key}: old="${oldValue}" vs new="${newValue}"`
+              );
+
+              if (oldValue !== newValue) {
+                updatedFields.push(key);
+                console.log(`Field ${key} updated: ${oldValue} -> ${newValue}`);
+              }
+            });
+          }
+          console.log('updatedFields', updatedFields);
+
+          // 기본적으로 valid_date는 항상 업데이트된다고 가정 (스캐너 API 특성상)
+          // if (!updatedFields.includes('valid_date')) {
+          //   updatedFields.push('valid_date');
+          // }
+
+          // Contact Panel에 업데이트 이벤트 발생 (실제 변경된 필드 정보 포함)
+          this.$emit('contactUpdated', {
+            updatedFields: updatedFields,
+            scannerData: response.data.scanner_data,
+          });
+
+          // 성공 메시지 표시
+          // useAlert(
+          //   `스캐너 정보 업데이트 완료: ${
+          //     response.data.scanner_data.is_charge ? '충전 완료' : '미충전'
+          //   }`
+          // );
+
+          // Contact Attributes 깜빡임 효과 트리거
+          this.contactUpdated = true;
+          setTimeout(() => {
+            this.contactUpdated = false;
+          }, 2000);
         } else {
           // 실패한 경우
           useAlert(`Failed Update Contact: ${response.data.error}`);
@@ -202,7 +244,7 @@ export default {
         console.error('Scanner API Error:', error);
         useAlert(
           error.response?.data?.error ||
-            'Scanner 정보 조회 중 오류가 발생했습니다.'
+            '고객 정보 조회 중 오류가 발생했습니다.'
         );
       } finally {
         this.isLoadingScannerInfo = false;
@@ -354,18 +396,6 @@ export default {
           :loading="isLoadingScannerInfo"
           @click="getScannerInfo"
         />
-        <!-- Scanner Info Button -->
-        <!-- <NextButton
-          v-tooltip.top-end="'Scanner 정보 조회'"
-          icon="i-ph-database"
-          slate
-          faded
-          sm
-          green
-          :disabled="isLoadingScannerInfo"
-          :loading="isLoadingScannerInfo"
-          @click="getScannerInfo"
-        /> -->
       </div>
       <EditContact
         v-if="showEditModal"
@@ -380,71 +410,15 @@ export default {
         @close="closeMergeModal"
       />
 
-      <!-- Scanner Info Modal -->
-      <woot-modal
-        v-if="showScannerModal"
-        v-model:show="showScannerModal"
-        :on-close="closeScannerModal"
+      <!-- Loading Spinner Overlay -->
+      <div
+        v-if="isLoadingScannerInfo"
+        class="fixed inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm flex items-center justify-center z-50"
       >
-        <div class="h-auto overflow-auto">
-          <div class="flex flex-col p-8">
-            <div class="flex items-center justify-between pb-4 border-b">
-              <h2 class="text-2xl font-medium">
-                {{ $t('CONTACT_PANEL.SCANNER_INFO') }}
-              </h2>
-            </div>
-
-            <div v-if="scannerData" class="mt-6">
-              <!-- Simple Charge Status -->
-              <div
-                class="flex items-center justify-center p-8 rounded-lg text-center"
-                :class="
-                  scannerData.is_charge
-                    ? 'bg-red-50 dark:bg-red-900/20'
-                    : 'bg-green-50 dark:bg-green-900/20'
-                "
-              >
-                <div>
-                  <h3
-                    class="text-2xl font-bold mb-2"
-                    :class="
-                      scannerData.is_charge
-                        ? 'text-red-800 dark:text-red-200'
-                        : 'text-green-800 dark:text-green-200'
-                    "
-                  >
-                    {{
-                      scannerData.is_charge
-                        ? $t('CONTACT_PANEL.CHARGED')
-                        : $t('CONTACT_PANEL.FREE')
-                    }}
-                  </h3>
-                  <p
-                    class="text-lg"
-                    :class="
-                      scannerData.is_charge
-                        ? 'text-red-600 dark:text-red-300'
-                        : 'text-green-600 dark:text-green-300'
-                    "
-                  >
-                    {{
-                      scannerData.is_charge
-                        ? $t('CONTACT_PANEL.CHARGED_MESSAGE')
-                        : $t('CONTACT_PANEL.FREE_MESSAGE')
-                    }}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div class="flex justify-end mt-6 pt-4 border-t">
-              <NextButton @click="closeScannerModal">
-                {{ $t('CONTACT_PANEL.CLOSE') }}
-              </NextButton>
-            </div>
-          </div>
-        </div>
-      </woot-modal>
+        <div
+          class="i-ph-spinner animate-spin text-5xl text-n-blue-600 dark:text-n-blue-400 dark:bg-white dark:bg-n-slate-12 rounded-full p-6 shadow-xl"
+        />
+      </div>
     </div>
     <woot-delete-modal
       v-if="showDeleteModal"
