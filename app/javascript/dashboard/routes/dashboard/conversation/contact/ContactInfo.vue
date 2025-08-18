@@ -238,14 +238,12 @@ export default {
           }, 2000);
         } else {
           // 실패한 경우
-          useAlert(`Failed Update Contact: ${response.data.error}`);
+          // useAlert(`Failed Update Contact: ${response.data.error}`);
+          console.log(`Failed Update Contact: ${response.data.error}`);
         }
       } catch (error) {
         console.error('Scanner API Error:', error);
-        useAlert(
-          error.response?.data?.error ||
-            '고객 정보 조회 중 오류가 발생했습니다.'
-        );
+        console.log('error', error.response?.data?.error);
       } finally {
         this.isLoadingScannerInfo = false;
       }
