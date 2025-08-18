@@ -118,8 +118,15 @@ class Api::V1::Accounts::ContactsController < Api::V1::Accounts::BaseController
 
   def scanner_info
     # contact의 mobile 번호 가져오기 (custom_attributes에서)
-    mobile = @contact.custom_attributes['mobile']
-    
+    mobile = nil
+    if @contact.custom_attributes['mobile']
+      mobile = @contact.custom_attributes['mobile']
+    elsif @contact.identifier
+      mobile = @contact.identifier
+    else
+      mobile = @contact.phone_number
+    end
+
     if mobile.blank?
       return render json: { error: 'Mobile number not found in contact' }, status: :unprocessable_entity
     end

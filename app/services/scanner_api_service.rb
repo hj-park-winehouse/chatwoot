@@ -88,7 +88,7 @@ class ScannerApiService
         parsed_data = {
           account_no: subscriber['account_no'],
           valid_date: subscriber['validDate'],
-          last_updated: subscriber['last_updated'],
+          # last_updated: subscriber['last_updated'],
           bill: subscriber['bill'],
           bank: subscriber['bank'],
           is_charge: data['is_charge']
