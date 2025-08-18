@@ -97,5 +97,5 @@ yarn-debug.log*
 
 
 # exclude log
-log.*.txt
+log.*txt
 nohup.out
