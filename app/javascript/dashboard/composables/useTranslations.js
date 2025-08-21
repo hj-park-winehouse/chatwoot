@@ -22,7 +22,7 @@ export function useTranslations(contentAttributes) {
     const translations = contentAttributes.value.translations;
     const firstKey = Object.keys(translations)[0];
     const firstTranslation = translations[firstKey];
-    
+
     // 기존 구조에서 실제 번역 텍스트 추출
     let content;
     if (typeof firstTranslation === 'object' && firstTranslation.content) {
@@ -34,7 +34,7 @@ export function useTranslations(contentAttributes) {
     } else {
       content = null;
     }
-    
+
     console.log('useTranslations translationContent:', {
       translations,
       firstKey,
@@ -42,7 +42,7 @@ export function useTranslations(contentAttributes) {
       extractedContent: content,
       typeOfExtractedContent: typeof content,
     });
-    
+
     return content;
   });
 

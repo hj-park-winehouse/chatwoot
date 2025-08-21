@@ -213,23 +213,11 @@ export default {
           }
           console.log('updatedFields', updatedFields);
 
-          // 기본적으로 valid_date는 항상 업데이트된다고 가정 (스캐너 API 특성상)
-          // if (!updatedFields.includes('valid_date')) {
-          //   updatedFields.push('valid_date');
-          // }
-
           // Contact Panel에 업데이트 이벤트 발생 (실제 변경된 필드 정보 포함)
           this.$emit('contactUpdated', {
             updatedFields: updatedFields,
             scannerData: response.data.scanner_data,
           });
-
-          // 성공 메시지 표시
-          // useAlert(
-          //   `스캐너 정보 업데이트 완료: ${
-          //     response.data.scanner_data.is_charge ? '충전 완료' : '미충전'
-          //   }`
-          // );
 
           // Contact Attributes 깜빡임 효과 트리거
           this.contactUpdated = true;
@@ -237,8 +225,6 @@ export default {
             this.contactUpdated = false;
           }, 2000);
         } else {
-          // 실패한 경우
-          // useAlert(`Failed Update Contact: ${response.data.error}`);
           console.log(`Failed Update Contact: ${response.data.error}`);
         }
       } catch (error) {
