@@ -14,7 +14,7 @@
   },
   "TEAM_AVAILABILITY": {
     "ONLINE": "हामी अनलाइन छौं",
-    "OFFLINE": "We are away at the moment"
+    "OFFLINE": ""
   },
   "REPLY_TIME": {
     "IN_A_FEW_MINUTES": "धेरै जसो केहि मिनेटमा जवाफ हुन्छ",

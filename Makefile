@@ -39,11 +39,8 @@ dev:
 	fi
 
 prod:
-	@if [ -f ./.overmind.sock ]; then \
-		echo "Overmind is already running. Use 'make force_run' to start a new instance."; \
-	else \
-		overmind start -f Procfile.prod; \
-	fi
+	lsof -ti:2999 | xargs kill -9 2>/dev/null || true
+	nohup overmind start -f Procfile.prod > log.txt 2>&1 & \
 
 prod-background:
 	@if [ -f ./.overmind.sock ]; then \

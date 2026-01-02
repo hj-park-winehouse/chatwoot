@@ -1,5 +1,5 @@
 token="7305214835:AAHg1aeB_3p2kPuq1hXNqUdSYGEBuzYxalQ"
-url="https://104c1b69046b.ngrok-free.app"
+url="https://telegram.ttgo.dev"
 webhook_url="${url}/webhooks/telegram/${token}"
 
 # curl
